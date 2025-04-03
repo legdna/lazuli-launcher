@@ -1,12 +1,13 @@
 import gi
 
 gi.require_version("Gtk", "4.0")
+gi.require_version("Gdk", "4.0")
 gi.require_version("Adw", "1")
 
-from gi.repository import Gtk, Adw, Gdk
+from gi.repository import Gtk, Adw, Gdk # type: ignore
 
 class NativeAboutDialog(Gtk.Window):
-    def __init__(self, parent, windows_theme):
+    def __init__(self, parent, action, windows_theme, update_methode):
         super().__init__()
 
         # Configure le dialogue
@@ -28,8 +29,8 @@ class NativeAboutDialog(Gtk.Window):
         vbox.set_margin_end(50)
 
         application_icon = Gtk.Image(
-            file = "data/oracles.png",
-            pixel_size = 120
+            icon_name="oracles",
+            pixel_size=120
         )
         vbox.append(application_icon)
 

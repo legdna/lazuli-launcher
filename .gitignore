@@ -1,4 +1,10 @@
 /.idea
 /.vscode
-/build
-/dist
+/.env
+/oracles.build
+/oracles.dist
+/data/config.json
+/data/background/test_vid.mp4
+/data/oracles.gresource
+__pycache__/
+*.pyc

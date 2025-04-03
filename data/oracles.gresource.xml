@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gresources>
+  <gresource prefix="/xyz/oraclesmc/OraclesLauncher">
+    <!-- Icons -->
+    <file>icons/hicolor/48x48/actions/close-menu.symbolic.png</file>
+
+    <file>icons/hicolor/48x48/actions/show-menu.symbolic.png</file>
+    <file>icons/hicolor/64x64/actions/show-menu.symbolic.png</file>
+    <file>icons/hicolor/128x128/actions/show-menu.symbolic.png</file>
+    <file>icons/hicolor/256x256/actions/show-menu.symbolic.png</file>
+
+    <file>icons/hicolor/48x48/actions/home-button-symbolic.symbolic.png</file>
+
+    <file>icons/hicolor/128x128/status/image-missing.png</file>
+    <file>icons/hicolor/256x256/status/image-missing.png</file>
+
+    <file>icons/hicolor/48x48/status/avatar-default-symbolic.symbolic.png</file>
+    <file>icons/hicolor/64x64/status/avatar-default-symbolic.symbolic.png</file>
+    <file>icons/hicolor/128x128/status/avatar-default-symbolic.symbolic.png</file>
+    <file>icons/hicolor/256x256/status/avatar-default-symbolic.symbolic.png</file>
+
+    <file>icons/hicolor/256x256/apps/oracles.png</file>
+    <file>icons/hicolor/512x512/apps/terracles.png</file>
+
+    <file>icons/hicolor/512x512/status/default-minecraft-profile.png</file>
+
+    <file>icons/hicolor/48x48/actions/login.symbolic.png</file>
+    <file>icons/hicolor/64x64/actions/login.symbolic.png</file>
+    <file>icons/hicolor/128x128/actions/login.symbolic.png</file>
+    <file>icons/hicolor/256x256/actions/login.symbolic.png</file>
+
+    <file>icons/hicolor/48x48/actions/logout.symbolic.png</file>
+    <file>icons/hicolor/64x64/actions/logout.symbolic.png</file>
+    <file>icons/hicolor/128x128/actions/logout.symbolic.png</file>
+    <file>icons/hicolor/256x256/actions/logout.symbolic.png</file>
+
+    <!-- Logos -->
+    <file>logos/oracles-logo.png</file>
+    <file>logos/terracles-logo.png</file>
+
+    <!-- Configuarations -->
+    <file preprocess="json-stripblanks">config.json</file>
+    <file>oracles.css</file>
+  </gresource>
+</gresources>

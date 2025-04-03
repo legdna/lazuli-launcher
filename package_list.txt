@@ -1,0 +1,16 @@
+pacman -Sy mingw-w64-ucrt-x86_64-gtk4
+pacman -Sy mingw-w64-ucrt-x86_64-libadwaita
+pacman -Sy mingw-w64-ucrt-x86_64-python
+pacman -Sy mingw-w64-ucrt-x86_64-python-gobject
+pacman -Sy mingw-w64-ucrt-x86_64-python-psutil
+pacman -Sy mingw-w64-ucrt-x86_64-webp-pixbuf-loader
+pacman -Sy mingw-w64-ucrt-x86_64-pyinstaller
+pacman -Sy mingw-w64-ucrt-x86_64-python-pip
+
+pip install darkdetect
+pip install discord-rich-presence
+pip install requests
+pip install minecraft_launcher_lib
+pip install pillow
+pip install dotenv
+pip install pywinstyles

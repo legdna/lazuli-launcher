@@ -1,33 +1,42 @@
 # -*- mode: python ; coding: utf-8 -*-
 
-datas = [
-    ('')
-]
+MSYS64_PATH = "C:/msys64/ucrt64"
 
-a = Analysis(
+a = Analysis( # type: ignore
     ['src/oracles.py'],
     pathex=[],
     binaries=[],
-    datas=[('data', 'data')],
-    hiddenimports=['ui.platform'],
+    datas=[
+        ('data', 'data'),
+        #("C:/msys64/ucrt64/lib/girepository-1.0/*.typelib", "girepository-1.0"),
+        # Icônes et thèmes
+        #("C:/msys64/ucrt64/share/icons/Adwaita", 'share/icons/Adwaita')
+    ],
+    hiddenimports=[
+        'asyncio',
+        'gi._error',
+        'gi._option',
+        'gi._enum'
+    ],
     hookspath=[],
     hooksconfig={
         'gi': {
-            'icons': ['Adwaita'],
-            'themes': ['Adwaita'],
             'module-versions': {
                 'Gtk': '4.0',
 		        'Adw': '1'
-            }
+            },
+            'icons': ['Adwaita'],
+            'themes': ['Adwaita']
         }
     },
     runtime_hooks=[],
     excludes=[],
-    noarchive=False,
+    noarchive=False
 )
-pyz = PYZ(a.pure)
 
-exe = EXE(
+pyz = PYZ(a.pure) # type: ignore
+
+exe = EXE( # type: ignore
     pyz,
     a.scripts,
     [],
@@ -45,7 +54,7 @@ exe = EXE(
     entitlements_file=None,
     icon='data/oracles.ico'
 )
-coll = COLLECT(
+coll = COLLECT( # type: ignore
     exe,
     a.binaries,
     a.datas,
