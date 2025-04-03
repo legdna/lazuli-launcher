@@ -1,0 +1,13 @@
+{
+    "launcher": {
+        "VERSION": "2.0.0",
+        "RELEASE_TYPE": "dev"
+    },
+    "microsoft": {
+        "CLIENT_ID": "",
+        "REDIRECT_URL": ""
+    },
+    "discord": {
+        "CLIENT_ID": ""
+    }
+}

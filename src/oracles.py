@@ -9,29 +9,6 @@ import pages.oracles.ui as oracles
 import pages.terracles.ui as terracles
 #import pages.about as about
 
-def setup_icon_theme():
-    if "__compiled__" in globals():
-        base_path = os.path.dirname(sys.executable)
-        datas_path = os.path.join(base_path, "share")
-        
-        print(base_path)
-        print(datas_path)
-
-        # Définir les variables d'environnement critiques
-        os.environ["XDG_DATA_DIRS"] = datas_path + os.pathsep + os.environ.get("XDG_DATA_DIRS", "")
-        #os.environ["GTK_THEME"] = "Adwaita:dark"
-        
-        print(os.getenv("XDG_DATA_DIRS"))
-
-        # Configurer GSettings pour forcer le thème
-        gsettings_schema_path = os.path.join(base_path, "share", "glib-2.0", "schemas")
-        if os.path.exists(gsettings_schema_path):
-            os.environ["GSETTINGS_SCHEMA_DIR"] = gsettings_schema_path
-            #subprocess.run(["glib-compile-schemas", gsettings_schema_path])
-
-# Appeler avant toute importation GTK !
-setup_icon_theme()
-
 import gi
 
 gi.require_version("Gtk", "4.0")

@@ -1,8 +1,9 @@
 import subprocess
-import dotenv
 import os
+import json
 
-dotenv.load_dotenv()
+with open("data/config.json", 'r') as config_file:
+    config = json.load(config_file)
 
 # Configuration des chemins
 MSYS64_PATH = "C:/msys64/ucrt64"
@@ -10,14 +11,10 @@ MSYS64_BIN_PATH = "C:/msys64/usr/bin"
 MSYS64_UCRT64_BIN_PATH = "C:/msys64/ucrt64/bin"
 
 APP_NAME = "Oraclès Launcher"
-LAUNCHER_VERSION = os.getenv("LAUNCHER_VERSION")
-LAUNCHER_RELEASE_TYPE = os.getenv("LAUNCHER_RELEASE_TYPE")
+LAUNCHER_VERSION = config["launcher"]["VERSION"]
+LAUNCHER_RELEASE_TYPE = config["launcher"]["RELEASE_TYPE"]
 ICON_PATH = "data/oracles.ico"
 SOURCE_FILE = "src/oracles.py"
-
-CLIENT_ID=os.getenv("CLIENT_ID")
-REDIRECT_URL=os.getenv("REDIRECT_URL")
-
 
 # Commande GResources
 gresources_cmd = [
@@ -83,9 +80,9 @@ nuitka_cmd = [
     
     # Dépendances de libadwaita > libappstream
     f"--include-data-files={MSYS64_PATH}/bin/libcurl-4.dll=libcurl-4.dll",
-    f"--include-data-files={MSYS64_PATH}/bin/libgettextlib-0-24.dll=libgettextlib-0-24.dll",
-    f"--include-data-files={MSYS64_PATH}/bin/libgettextpo-0.dll=libgettextpo-0.dll",
-    f"--include-data-files={MSYS64_PATH}/bin/libgettextsrc-0-24.dll=libgettextsrc-0-24.dll",
+    #f"--include-data-files={MSYS64_PATH}/bin/libgettextlib-0-24.dll=libgettextlib-0-24.dll",
+    #f"--include-data-files={MSYS64_PATH}/bin/libgettextpo-0.dll=libgettextpo-0.dll",
+    #f"--include-data-files={MSYS64_PATH}/bin/libgettextsrc-0-24.dll=libgettextsrc-0-24.dll",
     f"--include-data-files={MSYS64_PATH}/bin/libxml2-2.dll=libxml2-2.dll",
     f"--include-data-files={MSYS64_PATH}/bin/libxmlb-2.dll=libxmlb-2.dll",
     f"--include-data-files={MSYS64_PATH}/bin/libyaml-0-2.dll=libyaml-0-2.dll",
