@@ -29,6 +29,7 @@ pacman -Sy mingw-w64-ucrt-x86_64-python
 pacman -Sy mingw-w64-ucrt-x86_64-python-gobject
 pacman -Sy mingw-w64-ucrt-x86_64-python-psutil
 pacman -Sy mingw-w64-ucrt-x86_64-python-nuitka
+pacman -Sy mingw-w64-ucrt-x86_64-toolchain base-devel
 pacman -Sy mingw-w64-ucrt-x86_64-python-pip
 ```
 
@@ -41,6 +42,7 @@ pip install requests
 pip install minecraft_launcher_lib
 pip install pillow
 pip install pywinstyles
+pip install pygobject-stubs
 ```
 
 ---
