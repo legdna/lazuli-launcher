@@ -1,5 +1,4 @@
 import subprocess
-import os
 import json
 
 with open("data/config.json", 'r') as config_file:

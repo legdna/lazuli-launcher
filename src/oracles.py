@@ -1,3 +1,20 @@
+
+# Oraclès Launcher
+# ---
+# Copyright (C) 2025 - legdna <legdna@proton.me>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License version 3 for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 import sys
 import os
 import darkdetect
@@ -17,34 +34,10 @@ gi.require_version("Adw", "1")
 gi.require_version("GLib", "2.0")
 gi.require_version("Gio", "2.0")
 
-from gi.repository import Gtk, GLib, Adw, Gio, Gdk, GdkPixbuf # type: ignore
-
-screen = Gdk.Display.get_default()
-
-# Charger et enregistrer la ressource
-resource = Gio.Resource.load("data/oracles.gresource")
-resource._register()
-
-# Ajouter le chemin de la ressource au thème d'icônes
-theme = Gtk.IconTheme.get_for_display(screen)
-theme.add_resource_path("/xyz/oraclesmc/OraclesLauncher/icons/hicolor")
-
-#style_manager = Adw.StyleManager.get_default()
-#style_manager.set_color_scheme(Adw.ColorScheme.FORCE_DARK)
-
-css_provider = Gtk.CssProvider()
-css_provider.load_from_resource("/xyz/oraclesmc/OraclesLauncher/oracles.css")
-
-Gtk.StyleContext.add_provider_for_display(screen, css_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+from gi.repository import Gtk, GLib, Adw, Gio, Gdk # type: ignore
 
 # instanciation de la classe Platform
 platform = Platform()
-
-# Création des répertoires OraclesLauncher
-os.makedirs(platform.launcher_directory, exist_ok=True)
-os.makedirs(platform.oracles_directory, exist_ok=True)
-os.makedirs(platform.terracles_directory, exist_ok=True)
-
 
 #GLib.setenv("GSK_RENDERER", "VULKAN", False)
 GLib.setenv("GSK_DEBUG", "renderer", False)
@@ -157,7 +150,7 @@ class MainWindow(platform.appwindow):
         # BOUTON HOME
 
         self.home_button_icon = Gtk.Image(
-            icon_name="home-button-symbolic",
+            icon_name="home-button",
             pixel_size=sidebar_bouton_image_size
         )
         self.home_button_label = Gtk.Label(
@@ -361,6 +354,34 @@ class MainWindow(platform.appwindow):
 class OraclesLauncher(Adw.Application):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        screen = Gdk.Display.get_default()
+
+        # Charger et enregistrer la ressource
+        resource = Gio.Resource.load("data/oracles.gresource")
+        resource._register()
+
+        # Ajouter le chemin de la ressource au thème d'icônes
+        theme = Gtk.IconTheme.get_for_display(screen)
+        theme.add_resource_path("/xyz/oraclesmc/OraclesLauncher/icons/hicolor")
+
+        css_provider = Gtk.CssProvider()
+        css_provider.load_from_resource("/xyz/oraclesmc/OraclesLauncher/oracles.css")
+        Gtk.StyleContext.add_provider_for_display(screen, css_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+
+        #style_manager = Adw.StyleManager.get_default()
+        #style_manager.set_color_scheme(Adw.ColorScheme.FORCE_DARK)
+
+        # Création des répertoires OraclesLauncher
+        os.makedirs(platform.launcher_directory, exist_ok=True)
+        os.makedirs(platform.oracles_directory, exist_ok=True)
+        os.makedirs(platform.terracles_directory, exist_ok=True)
+
+        # Importation des identifiants de connexion
+        import json
+        with open(platform.auth_file_path, 'r') as auth_file:
+            login_data = json.load(auth_file)
+        
+
         self.connect('activate', self.on_activate)
 
     def on_activate(self, app):
