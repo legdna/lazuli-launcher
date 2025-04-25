@@ -21,6 +21,7 @@ import darkdetect
 
 from features.platform import Platform
 from features.status import DiscordRichPresence
+import features.auth as auth
 
 import pages.oracles.ui as oracles
 import pages.terracles.ui as terracles
@@ -373,14 +374,9 @@ class OraclesLauncher(Adw.Application):
 
         # Création des répertoires OraclesLauncher
         os.makedirs(platform.launcher_directory, exist_ok=True)
+        os.makedirs(platform.profiles_directory, exist_ok=True)
         os.makedirs(platform.oracles_directory, exist_ok=True)
         os.makedirs(platform.terracles_directory, exist_ok=True)
-
-        # Importation des identifiants de connexion
-        import json
-        with open(platform.auth_file_path, 'r') as auth_file:
-            login_data = json.load(auth_file)
-        
 
         self.connect('activate', self.on_activate)
 

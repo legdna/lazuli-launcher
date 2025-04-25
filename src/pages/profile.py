@@ -29,7 +29,7 @@ platform = Platform()
 utilities = Utilities()
 
 class Profile():
-    def __init__(self, ui, main_window, profile_button_image):
+    def __init__(self, ui, main_window, profile_button_image, login_data):
         self.main_window = main_window
 
         self.profile_button_image = profile_button_image
@@ -70,13 +70,12 @@ class Profile():
 
         #self.avatar_image = Gdk.Texture.new_from_file(Gio.File.new_for_path("data/default_profile_logo.png"))
         self.avatar = Gtk.Image(
-            icon_name="default-minecraft-profile",
+
             pixel_size=90
         )
         self.profile_box.append(self.avatar)
 
         self.profile_name = Gtk.Label(
-            label="Déconnecté",
             css_classes=[
                 "title-1"
             ]
@@ -104,26 +103,12 @@ class Profile():
             child=self.login_button_box,
             css_classes=[
                 "suggested-action",
-                #"circular",
                 "pill",
                 "title-2"
             ]
         )
         self.login_button.connect('clicked', lambda widget: platform.dialog(main_window, auth.NativeAuthDialog, auth.AdwAuthDialog, "login", self.update_profile))
         self.profile_box.append(self.login_button)
-
-        ui.game_interface.set_sidebar(self.profile_overlay)
-
-    def update_profile(self, profile_name):
-        new_profile_image = platform.launcher_directory + "/profile.png"
-
-        self.profile_button_image.set_from_file(new_profile_image)
-        self.avatar.set_from_file(new_profile_image)
-
-        self.profile_name.set_label(profile_name)
-
-        # Supprime le bouton login
-        self.login_button.hide()
 
         self.logout_button_icon = Gtk.Image.new_from_icon_name("logout")
         self.logout_button_label = Gtk.Label.new("Se déconnecter")
@@ -137,13 +122,36 @@ class Profile():
             child=self.logout_button_box,
             css_classes=[
                 "destructive-action",
-                #"circular",
                 "pill",
                 "title-2"
             ]
         )
-        self.logout_button.connect('clicked', lambda widget: platform.dialog(self.main_window, auth.NativeAuthDialog, auth.AdwAuthDialog, "login", self.update_profile))
+        self.logout_button.connect('clicked', lambda widget: platform.dialog(self.main_window, auth.NativeAuthDialog, auth.AdwAuthDialog, "logout", self.update_profile))
         self.profile_box.append(self.logout_button)
+
+        self.update_profile(login_data)
+        
+        ui.game_interface.set_sidebar(self.profile_overlay)
+
+    def update_profile(self, login_data):
+        avatar_image = "default-minecraft-profile"
+
+        if login_data != None:
+            avatar_image = f"{platform.profiles_directory}/{login_data["profile"]["avatar"]}.png"
+
+            self.avatar.set_from_file(avatar_image)
+            self.profile_button_image.set_from_file(avatar_image)
+            self.profile_name.set_label(login_data["name"])
+            
+            self.login_button.set_visible(False)
+            self.logout_button.set_visible(True)
+        else: 
+            self.avatar.set_from_icon_name(avatar_image)
+            self.profile_button_image.set_from_icon_name(avatar_image)
+            self.profile_name.set_label("Déconnecté")
+
+            self.logout_button.set_visible(False)
+            self.login_button.set_visible(True)
 
     def close_profile(self, button, ui):
         ui.game_interface.set_show_sidebar(False)

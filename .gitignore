@@ -8,3 +8,4 @@
 /data/oracles.gresource
 __pycache__/
 *.pyc
+*.zip

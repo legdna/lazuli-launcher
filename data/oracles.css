@@ -3,3 +3,10 @@
 .image-background {
     opacity: 50%;
 }
+
+progressbar > text {
+    font-size: 14px;
+    font-weight: bold;
+    opacity: 0.85;
+    margin-bottom: 15px;
+}

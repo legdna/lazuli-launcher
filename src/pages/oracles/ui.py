@@ -19,10 +19,12 @@ import sys
 import gi
 import glob
 import random
+import os
 
 from features.platform import Platform
-from features.play.terracles import Terracles
+from features.play.oracles import oracles
 from features.status import PlayTime
+import features.auth as auth
 
 from pages.profile import Profile
 import pages.about as about
@@ -39,6 +41,7 @@ platform = Platform()
 class Menu():
     def __init__(self, main_window):
         PlayTime()
+
         self.game_interface = Adw.OverlaySplitView(
             collapsed=True,
             show_sidebar=False
@@ -60,12 +63,19 @@ class Menu():
         self.game_interface_box.append(self.contentbox)
 
         self.profile_button_logo = Gtk.Image(
-            icon_name="default-minecraft-profile",
             pixel_size=50,
             css_classes=[
                 "lowres-icon"
             ]
         )
+
+        login_data = auth.load_file()
+        if login_data != None:
+            print(login_data)
+            self.profile_button_logo.set_from_file(f"{platform.profiles_directory}/{login_data["profile"]["avatar"]}.png")
+        else:
+            self.profile_button_logo.set_from_icon_name("default-minecraft-profile")
+        
         self.profile_button = Gtk.Button(
             child=self.profile_button_logo,
             halign=Gtk.Align.START,
@@ -79,9 +89,10 @@ class Menu():
         )
         #self.profile_button.set_icon_name("sidebar-show-symbolic")
         self.profile_button.connect('clicked', self.show_sidbar)
+
         self.contentbox.add_overlay(self.profile_button)
 
-        profile = Profile(self, main_window, self.profile_button_logo)
+        profile = Profile(self, main_window, self.profile_button_logo, login_data)
 
         self.about_button_icon = Gtk.Image.new_from_icon_name("help-about-symbolic")
         self.about_button_label = Gtk.Label.new("À propos")
@@ -185,8 +196,14 @@ class Menu():
                 "title-3"
             ]
         )
-        self.play_button.connect("clicked", Terracles().play)
+        self.play_button.connect("clicked", lambda widget: oracles(widget, self.progressbar, self.show_sidbar))
         self.game_interface_box_menu.append(self.play_button)
+
+        self.progressbar = Gtk.ProgressBar(
+            margin_top=20,
+            visible=False
+        )
+        self.game_interface_box_menu.append(self.progressbar)
 
         GLib.timeout_add(15000, self.image_auto_navigation)
 
@@ -194,7 +211,7 @@ class Menu():
         main_window.select_game_interface.pop()
         main_window.oracles_button.set_sensitive(True)
     
-    def show_sidbar(self, button):
+    def show_sidbar(self, button=None):
         if self.game_interface.get_show_sidebar() == False:
             self.game_interface.set_show_sidebar(True)
         else:

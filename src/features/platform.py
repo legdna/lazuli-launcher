@@ -46,8 +46,6 @@ class Platform():
 
             hwnd = windll.user32.FindWindowW(None, title)
             pywinstyles.apply_style(hwnd, style="mica")
-        else:
-            pass
 
     def apparence(self, window):
         if self.pf != 'Linux':
@@ -83,7 +81,8 @@ class Platform():
 
         self.oracles_directory = self.launcher_directory + "/oracles"
         self.terracles_directory = self.launcher_directory + "/terracles"
+        self.profiles_directory = self.launcher_directory + "/profiles"
 
-        self.auth_file_path = self.launcher_directory + "/auth.json"
+        self.auth_file_path = self.profiles_directory + "/auth.json"
 
         self.default_profile_image = "data/default_profile_logo.png"

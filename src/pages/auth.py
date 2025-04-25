@@ -23,6 +23,7 @@ import json
 
 from features.platform import Platform
 from features.utilities import Utilities
+import features.auth as auth
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
@@ -39,6 +40,8 @@ class NativeAuthDialog(Gtk.Window):
     def __init__(self, parent, action, windows_theme, update_profile):
         super().__init__()
 
+        self.parent = parent
+
         # Configure le dialogue
         self.set_transient_for(parent)
         self.set_modal(True)
@@ -53,7 +56,7 @@ class NativeAuthDialog(Gtk.Window):
             self.login
             self.login(title, windows_theme, update_profile)
         elif action == "logout":
-            self.logout()
+            self.logout(update_profile)
         else:
             sys.exit("Error: action " + action + " does not exist")
     
@@ -160,7 +163,7 @@ class NativeAuthDialog(Gtk.Window):
         self.set_child(self.login_box)
 
         self.connect("realize", lambda widget: windows_theme(self, title))
-        self.show()
+        self.set_visible(True)
 
     def validate_login(self, state, code_verifier, update_profile, login_entry_content=None):
         def get_login_data(get_login_data_task, object, any, cancellable):
@@ -176,12 +179,26 @@ class NativeAuthDialog(Gtk.Window):
                 return
             except KeyError:
                 print("Url invalide !")
-
+                self.close()
                 # Annonce que la tache à échouer
                 #get_login_data_task.return_boolean(False)
                 return
             
-            login_data = minecraft_launcher_lib.microsoft_account.complete_login(self.CLIENT_ID, None, self.REDIRECT_URL, auth_code, code_verifier)
+            try:
+                login_data = minecraft_launcher_lib.microsoft_account.complete_login(self.CLIENT_ID, None, self.REDIRECT_URL, auth_code, code_verifier)
+            except KeyError:
+                print("???")
+
+                get_login_data_task.return_boolean(False)
+                #self.close()
+
+                return
+            except minecraft_launcher_lib.exceptions.AccountNotOwnMinecraft:
+                print("")
+
+                get_login_data_task.return_boolean(False)
+                self.close()
+                return
             
             # Annonce que la tache est terminé
             get_login_data_task.return_boolean(True)
@@ -196,20 +213,42 @@ class NativeAuthDialog(Gtk.Window):
 
             def get_skin_finish(source_file, result):
                 if source_file.copy_finish(result):
-                    load_skin = Image.open(skin_dest_path)
-                    profile_picture = load_skin.crop((8,8,16,16))
-                    profile_picture = profile_picture.resize((64,64), Image.Resampling.NEAREST)
-                    profile_picture.save(platform.launcher_directory+"/profile.png")
 
                     #login_avatar_image = Gdk.Texture.new_from_file(Gio.File.new_for_path(platform.oracles_directory+"/profile.png"))
                     #self.login_avatar.set_custom_image(login_avatar_image)
                     #self.login_title.set_label("Connecté")
 
-                    with open(platform.auth_file_path, 'w') as auth_file:
-                        json.dump(login_data, auth_file)
-                        print("Les identifiants de connexion ont été enregistrés avec succès !")
+                    import os
+                    login_data["profile"] = {"avatar": f"profile_{login_data["id"]}", "state": "ACTIVE"}
                     
-                    update_profile(login_data["name"])
+                    import features.auth as auth
+                    profiles_data = auth.load_file()
+                    if profiles_data != None:
+                        for profile in profiles_data["profiles"]:
+                            if profile["id"] != login_data["id"]:
+                                profiles_data["profiles"].append(login_data)
+                                with open(platform.auth_file_path, 'w') as auth_file:
+                                    json.dump(profiles_data, auth_file, indent=4)
+                                    print("Les identifiants de connexion ont été enregistrés avec succès !")
+                            else:
+                                print("Ce compte existe déjà !")
+                    else:
+                        profiles_data = {"profiles": []}
+                        profiles_data["profiles"].append(login_data)
+
+                        with open(platform.auth_file_path, 'w') as auth_file:
+                            json.dump(profiles_data, auth_file, indent=4)
+                            print("Les identifiants de connexion ont été enregistrés avec succès !")
+                    
+                    load_skin = Image.open(skin_dest_path)
+                    profile_picture = load_skin.crop((8,8,16,16))
+                    profile_picture = profile_picture.resize((64,64), Image.Resampling.NEAREST)
+                    profile_picture.save(platform.profiles_directory + f"/{login_data["profile"]["avatar"]}.png")
+
+                    os.remove(skin_dest_path)
+
+                    print(login_data["profile"]["avatar"])
+                    update_profile(login_data)
                     self.close()
 
             if task.propagate_boolean():
@@ -221,7 +260,7 @@ class NativeAuthDialog(Gtk.Window):
                         skin_src_uri = skin.get("url")
                         break
 
-                skin_dest_path = platform.oracles_directory+"/skin.png"
+                skin_dest_path = platform.profiles_directory+"/skin.png"
 
                 # Télécharge le skin de l'utilisateur
                 utilities.copy_file(skin_src_uri, skin_dest_path, "uri", get_skin_finish)
@@ -236,8 +275,19 @@ class NativeAuthDialog(Gtk.Window):
         get_login_data_task = Gio.Task.new(None, None, get_skin, None)
         get_login_data_task.run_in_thread(get_login_data)
 
-    def logout(self):
-        pass
+        if get_login_data_task == False:
+            alert = Gtk.AlertDialog()
+            alert.set_message("Aucun compte Minecaft trouvé !")
+            alert.set_detail("Le compte avec lequel vous tentez de vous connecter ne possède pas Minecaft.")
+            alert.set_buttons(["Annuler", "Quitter"])
+            alert.choose(self)
+
+    def logout(self, update_profile):
+        login_data = auth.load_file()
+        auth.remove_profile(login_data["id"])
+        
+        login_data = auth.load_file()
+        update_profile(login_data)
 
 class AdwAuthDialog():
     def __init__(self, parent):
