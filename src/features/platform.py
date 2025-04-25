@@ -36,8 +36,18 @@ class Platform():
         if self.pf != 'Linux':
             GLib.setenv("GTK_CSD", "0", False)
             self.appwindow = Gtk.ApplicationWindow
+            self.native_window = Gtk.Window
         else:
             self.appwindow = Adw.ApplicationWindow
+            self.native_window = Adw.Dialog
+
+        match self.pf:
+            case "Windows":
+                self.os_release = "windows"
+            case "Linux":
+                self.os_release = "linux"
+            case "Darwin":
+                self.os_release = "mac"
 
     def windows_theme(self, window, title):
         if self.pf == 'Windows' and darkdetect.isDark():
@@ -47,10 +57,10 @@ class Platform():
             hwnd = windll.user32.FindWindowW(None, title)
             pywinstyles.apply_style(hwnd, style="mica")
 
-    def apparence(self, window):
-        if self.pf != 'Linux':
+    def apparence(self, window, widget=None):
+        if self.pf != 'Linux' and widget == None:
             window.set_child(window.main_window_box)
-        else:
+        elif widget == None:
             window.headerbar = Adw.HeaderBar(
                 css_classes=[
                     "flat"
@@ -59,12 +69,28 @@ class Platform():
 
             window.main_window_box.append(window.headerbar)
             window.set_content(window.main_window_box)
+        elif self.pf != 'Linux':
+            window.set_child(widget)
+        else:
+            window.headerbar = Adw.HeaderBar(
+                css_classes=[
+                    "flat"
+                ]
+            )
+
+            widget.append(window.headerbar)
+            window.set_child(widget)
     
     def dialog(self, window, native_dialog, adw_dialog, action, update_methode=None):
-        if self.pf != 'Linux':
-            native_dialog(window, action, self.windows_theme, update_methode)
-        else:
-            adw_dialog(window)
+        #if self.pf != 'Linux':
+        native_dialog(window, action, self.windows_theme, update_methode)
+        #else:
+        #    adw_dialog(window)
+
+
+    def java_os_release(self):
+        pf = platform.system()
+        
 
 
     def path(self):
@@ -75,7 +101,7 @@ class Platform():
         elif self.pf == 'Darwin':
             self.launcher_directory = ""
         elif self.pf == 'Linux':
-            self.launcher_directory = ""
+            self.launcher_directory = os.getenv('HOME') + "/.var/app/xyz.oraclesmc.OraclesLauncher"
         else:
             sys.exit("Error : Platform unsupported !")
 

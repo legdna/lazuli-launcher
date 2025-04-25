@@ -62,6 +62,9 @@ class MainWindow(platform.appwindow):
             orientation=Gtk.Orientation.VERTICAL
         )
 
+        # Apparence de la fenêtre
+        platform.apparence(self)
+
         self.main_window_view = Adw.OverlaySplitView(
             collapsed=False,
             show_sidebar=True,
@@ -288,9 +291,6 @@ class MainWindow(platform.appwindow):
         self.unfold_button.connect('clicked', lambda widget: self.navigation_menu_logics("show-side-menu", None, None))
         self.settings_box.append(self.unfold_button)
         self.sidebar_buttons.append(self.unfold_button)
-
-        # Apparence de la fenêtre
-        platform.apparence(self)
 
         drp_task = Gio.Task.new()
         drp_task.run_in_thread(DiscordRichPresence().start)

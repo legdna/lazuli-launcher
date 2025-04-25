@@ -112,11 +112,10 @@ def launch_minecraft(task, object, any, cancellable):
 
     # Création du répertoire java
     os.makedirs(java_directory, exist_ok=True)
-    java_zip_path = f"{java_directory}/java-{java_version}-jre.zip"
     java_version_directory = f"{java_directory}/{java_version}"
 
     # Obtention de la dernière version de java
-    latest_java_url = f"https://api.adoptium.net/v3/assets/latest/{java_version}/hotspot?architecture=x64&image_type=jre&os=windows&vendor=eclipse"
+    latest_java_url = f"https://api.adoptium.net/v3/assets/latest/{java_version}/hotspot?architecture=x64&image_type=jre&os={platform.os_release}&vendor=eclipse"
     get_latest_java = Soup.Message.new("GET", latest_java_url)
     latest_java = soup_session.send_and_read(get_latest_java).get_data().decode()
     latest_java = json.loads(latest_java)
@@ -125,15 +124,23 @@ def launch_minecraft(task, object, any, cancellable):
 
     java_dowload_link = latest_java[0]["binary"]["package"]["link"]
     java_checksum = latest_java[0]["binary"]["package"]["checksum"]
+    java_archive_path = f"{java_directory}/{latest_java[0]["binary"]["package"]["name"]}"
     java_release_name = f"{latest_java[0]["release_name"]}-jre"
 
     java_executable_path = f"{java_version_directory}/bin/java"
-        
+    
     if not os.path.exists(java_version_directory):
-        Gio.File.new_for_uri(java_dowload_link).copy(Gio.File.new_for_path(java_zip_path), Gio.FileCopyFlags.OVERWRITE)
-        with ZipFile(java_zip_path, "r") as java_zip:
-            java_zip.extractall(java_directory)
-            
+        Gio.File.new_for_uri(java_dowload_link).copy(Gio.File.new_for_path(java_archive_path), Gio.FileCopyFlags.OVERWRITE)
+        match platform.os_release:
+            case "windows":
+                with ZipFile(java_archive_path, "r") as java_zip:
+                    java_zip.extractall(java_directory)
+            case "linux":
+                import tarfile
+                with tarfile.open(java_archive_path, "r:gz") as java_tar_gz:
+                    java_tar_gz.extractall(java_directory)
+        
+        os.remove(java_archive_path)  
         os.rename(f"{java_directory}/{java_release_name}", java_version_directory)
 
     #https://api.adoptium.net/v3/assets/latest/{java_version}/hotspot?architecture=x64&image_type=jre&os=windows&vendor=eclipse
@@ -168,6 +175,7 @@ def launch_minecraft(task, object, any, cancellable):
         
         with ZipFile(modpack_zip_path, "r") as modpack_zip:
             modpack_zip.extractall(oracles_version_directory)
+            os.remove(modpack_zip_path)
     except:
         print("Une erreur est survenu lors de l'installation du modpack")
         return
@@ -192,12 +200,17 @@ def launch_minecraft(task, object, any, cancellable):
     progressbar.set_text("Lancement de minecraft")
     
     os.chdir(minecraft_directory)
-    minecraft_proc = subprocess.Popen(start_minecraft_command, stdout=subprocess.PIPE, text=True)
-    for line in minecraft_proc.stdout:
-        update_vte()
+
     
-    minecraft_proc.stdout.close()
+    minecraft_proc = Gio.Subprocess.new(start_minecraft_command, Gio.SubprocessFlags.STDOUT_PIPE)
     minecraft_proc.wait()
+
+    #minecraft_proc = subprocess.run(start_minecraft_command, stdout=subprocess.PIPE, text=True)
+    #for line in minecraft_proc.stdout:
+    #    update_vte()
+    
+    #minecraft_proc.stdout.close()
+    #minecraft_proc.wait()
 
 def update_vte():
     pass
