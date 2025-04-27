@@ -23,7 +23,6 @@ import os
 
 from features.platform import Platform
 from features.play.oracles import oracles
-from features.status import PlayTime
 import features.auth as auth
 
 from pages.profile import Profile
@@ -40,17 +39,18 @@ platform = Platform()
 
 class Menu():
     def __init__(self, main_window):
-        PlayTime()
+        self.notification_overlay = Adw.ToastOverlay()
 
         self.game_interface = Adw.OverlaySplitView(
             collapsed=True,
             show_sidebar=False
         )
+        self.notification_overlay.set_child(self.game_interface)
         #main_window.select_game_interface.append(self.game_interface)
 
         self.game_page = Adw.NavigationPage.new_with_tag(
             tag="oracles",
-            child=self.game_interface,
+            child=self.notification_overlay,
             title="Oraclès"
         )
 
@@ -110,7 +110,7 @@ class Menu():
             ]
         )
         self.about_button.connect('clicked', lambda widget: platform.dialog(main_window, about.NativeAboutDialog, about.AdwAboutDialog, "show"))
-        self.contentbox.add_overlay(self.about_button)
+        #self.contentbox.add_overlay(self.about_button)
 
         self.game_interface_box_menu = Gtk.Box(
             height_request=100,
@@ -134,6 +134,7 @@ class Menu():
         # Ajoue des images d'arrière-plan
         backgrounds = glob.glob('data/background/oracles/*.bkg')
         random.shuffle(backgrounds)
+        print(backgrounds[0])
         for background in backgrounds:
             print(background)
             image = Gtk.Picture(
@@ -196,7 +197,7 @@ class Menu():
                 "title-3"
             ]
         )
-        self.play_button.connect("clicked", lambda widget: oracles(widget, self.progressbar, self.show_sidbar))
+        self.play_button.connect("clicked", lambda widget: oracles(main_window, widget, self.progressbar, self.profile_button, self.show_sidbar, profile, self.notification_overlay))
         self.game_interface_box_menu.append(self.play_button)
 
         self.progressbar = Gtk.ProgressBar(

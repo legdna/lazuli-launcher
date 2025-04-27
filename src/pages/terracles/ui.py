@@ -37,14 +37,17 @@ class Menu():
     def __init__(self, main_window):
         platform = Platform()
 
+        self.notification_overlay = Adw.ToastOverlay()
+
         self.game_interface = Gtk.Box(
             orientation=Gtk.Orientation.VERTICAL
         )
+        self.notification_overlay.set_child(self.game_interface)
         #main_window.select_game_interface.append(self.game_interface)
 
         self.game_page = Adw.NavigationPage.new_with_tag(
             tag="terracles",
-            child=self.game_interface,
+            child=self.notification_overlay,
             title="Terraclès"
         )
 
@@ -69,7 +72,7 @@ class Menu():
             ]
         )
         self.about_button.connect('clicked', lambda widget: platform.dialog(main_window, about.NativeAboutDialog, about.AdwAboutDialog, "show"))
-        self.contentbox.add_overlay(self.about_button)
+        #self.contentbox.add_overlay(self.about_button)
 
         self.game_interface_box_menu = Gtk.Box(
             height_request=100,
@@ -155,7 +158,7 @@ class Menu():
                 "title-3"
             ]
         )
-        self.play_button.connect("clicked", Terracles().play)
+        self.play_button.connect("clicked", lambda widget: Terracles().play(widget, self.notification_overlay))
         self.game_interface_box_menu.append(self.play_button)
 
         GLib.timeout_add(15000, self.image_auto_navigation)

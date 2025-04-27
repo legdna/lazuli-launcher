@@ -10,3 +10,11 @@ progressbar > text {
     opacity: 0.85;
     margin-bottom: 15px;
 }
+
+toastoverlay > toast > widget {
+    margin-right: 0px;
+}
+
+toastoverlay > toast {
+    background-color: rgba(0, 0, 0, 0.5);
+}

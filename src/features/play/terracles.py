@@ -23,11 +23,23 @@ import os
 from features.utilities import Utilities
 from features.platform import Platform
 
+import gi
+
+gi.require_version("Adw", "1")
+
+from gi.repository import Adw # type: ignore
+
 class Terracles():
     def __init__(self):
         pass
 
-    def play(self, play_button):
+    def play(self, play_button, notification_overlay):
+
+        not_available_notification = Adw.Toast(title="Terraclès n'est pas encore disponible sur cette version du launcher !")
+        notification_overlay.add_toast(not_available_notification)
+
+        return
+
         self.install_tmodloader()
 
         import webbrowser
