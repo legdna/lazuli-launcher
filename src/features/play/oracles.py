@@ -21,6 +21,7 @@ import minecraft_launcher_lib
 import json
 from zipfile import ZipFile
 import psutil
+import requests
 
 import features.auth
 from features.platform import Platform
@@ -32,9 +33,9 @@ import gi
 gi.require_version("Adw", "1")
 gi.require_version("Gio", "2.0")
 gi.require_version("GLib", "2.0")
-gi.require_version("Soup", "3.0")
+#gi.require_version("Soup", "3.0")
 
-from gi.repository import GLib, Gio, Soup, Adw # type: ignore
+from gi.repository import GLib, Gio, Adw # type: ignore
 
 platform = Platform()
 utilities = Utilities()
@@ -105,12 +106,13 @@ def launch_minecraft(task, object, any, cancellable):
     CLIENT_ID = LAUNCHER_CONFIG["microsoft"]["CLIENT_ID"]
     REDIRECT_URL = LAUNCHER_CONFIG["microsoft"]["REDIRECT_URL"]
 
-    soup_session = Soup.Session()
+    #soup_session = Soup.Session()
 
     try:
         #refresh token
         profile_data = minecraft_launcher_lib.microsoft_account.complete_refresh(CLIENT_ID, None, REDIRECT_URL, profile_data["refresh_token"])
         features.auth.update_profile(profile_data["id"], profile_data)
+        pass
     except:
         print("Erreur lors du renouvellement du profile utilisateur !")
         task.return_error(GLib.Error("Une erreur est survenu lors de l'installation du modpack"))
@@ -119,10 +121,10 @@ def launch_minecraft(task, object, any, cancellable):
     try:
         update_url = "https://oraclesmc.xyz/update.json"
 
-        get_latest_update_file = Soup.Message.new("GET", update_url)
-        latest_update_file = soup_session.send_and_read(get_latest_update_file).get_data().decode()
-
-        update_data = json.loads(latest_update_file)
+        #get_latest_update_file = Soup.Message.new("GET", update_url)
+        #latest_update_file = soup_session.send_and_read(get_latest_update_file).get_data().decode()
+        #update_data = json.loads(latest_update_file)
+        update_data = requests.get(update_url).json()
     except:
         task.return_error(GLib.Error("Une erreur est survenu lors de l'installation du modpack"))
         return
@@ -148,9 +150,11 @@ def launch_minecraft(task, object, any, cancellable):
 
     # Obtention de la dernière version de java
     latest_java_url = f"https://api.adoptium.net/v3/assets/latest/{java_version}/hotspot?architecture=x64&image_type=jre&os={platform.os_release}&vendor=eclipse"
-    get_latest_java = Soup.Message.new("GET", latest_java_url)
-    latest_java = soup_session.send_and_read(get_latest_java).get_data().decode()
-    latest_java = json.loads(latest_java)
+    latest_java = requests.get(latest_java_url).json()
+
+    #get_latest_java = Soup.Message.new("GET", latest_java_url)
+    #latest_java = soup_session.send_and_read(get_latest_java).get_data().decode()
+    #latest_java = json.loads(latest_java)
 
     print(latest_java)
 
@@ -229,7 +233,7 @@ def launch_minecraft(task, object, any, cancellable):
 
         start_minecraft_command = minecraft_launcher_lib.command.get_minecraft_command(fabric_loader_version, minecraft_directory, start_minecraft_options)
     except:
-        task.return_error(GLib.Error("Une erreur est survenu lors de l'installation du modpack"))
+        task.return_error(GLib.Error("Une erreur est survenu lors de l'initialisation d'oraclès"))
         return
     
     progressbar.set_text("Lancement de minecraft")

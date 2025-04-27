@@ -28,8 +28,9 @@ nuitka_cmd = [
     "nuitka",
 #    "--onefile",
     "--standalone",
-#    "--windows-disable-console",
+    "--windows-console-mode=disable",
     "--follow-imports",
+#    "--no-deployment-flag=self-execution",
 
     # Information sur l'application
     f"--output-filename={APP_NAME}.exe",
@@ -51,6 +52,8 @@ nuitka_cmd = [
     f"--include-data-files={MSYS64_PATH}/bin/libgio-2.0-0.dll=libgio-2.0-0.dll",
     f"--include-data-files={MSYS64_PATH}/bin/libgdk_pixbuf-2.0-0.dll=libgdk_pixbuf-2.0-0.dll",
     f"--include-data-files={MSYS64_PATH}/bin/gdbus.exe=gdbus.exe",
+    f"--include-data-files={MSYS64_PATH}/bin/gspawn-win64-helper.exe=gspawn-win64-helper.exe",
+    f"--include-data-files={MSYS64_PATH}/bin/gspawn-win64-helper-console.exe=gspawn-win64-helper-console.exe",
 
     # ------------------------------------------------------------------------------------
     # > -- LIBGTK -- <
@@ -114,6 +117,24 @@ nuitka_cmd = [
 
     # Dépendances de libpango > libthai
     f"--include-data-files={MSYS64_PATH}/bin/libdatrie-1.dll=libdatrie-1.dll",
+
+    # ------------------------------------------------------------------------------------
+    # > -- LIBSOUP -- <
+    # ------------------------------------------------------------------------------------
+
+    #f"--include-data-files={MSYS64_PATH}/bin/libsoup-3.0-0.dll=libsoup-3.0-0.dll",
+
+    # Dépendances de libsoup
+    #f"--include-data-files={MSYS64_PATH}/bin/libproxy-1.dll=libproxy-1.dll",
+    #f"--include-data-files={MSYS64_PATH}/bin/libgnutls-30.dll=libgnutls-30.dll",
+    #f"--include-data-files={MSYS64_PATH}/bin/libproxy-1.dll=libproxy-1.dll",
+    #f"--include-data-files={MSYS64_PATH}/bin/libsqlite3-0.dll=libsqlite3-0.dll",
+
+    # Dépendances de libsoup > glib-networking
+    #f"--include-data-files={MSYS64_PATH}/bin/brotli.exe=brotli.exe",
+    #f"--include-data-files={MSYS64_PATH}/bin/libgmp-10.dll=libgmp-10.dll",
+    #f"--include-data-files={MSYS64_PATH}/bin/libtasn1-6.dll=libtasn1-6.dll",
+    #f"--include-data-files={MSYS64_PATH}/bin/libnettle-8.dll=libnettle-8.dll",
 
     # ------------------------------------------------------------------------------------
     # > -- DATAS -- <
