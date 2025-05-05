@@ -17,6 +17,8 @@
 
 from pathlib import Path
 import json
+import os
+import psutil
 
 from features.platform import Platform
 
@@ -27,45 +29,60 @@ gi.require_version("GLib", "2.0")
 
 from gi.repository import Gio, GLib # type: ignore
 
-class Utilities():
-    def __init__(self):
-        pass
+platform = Platform()
 
-    def copy_file(self, src_path, dest_path, src_type, callback=None):
-        def on_copy_finished(source_file, result):
-            try:
-                success = source_file.copy_finish(result)
-                print("File copy finished:", "Success" if success else "Failed")
-            except GLib.Error as e:
-                print("Error during file copy:", e.message)
+def copy_file(src_path, dest_path, src_type, callback=None):
+    def on_copy_finished(source_file, result):
+        try:
+            success = source_file.copy_finish(result)
+            print("File copy finished:", "Success" if success else "Failed")
+        except GLib.Error as e:
+            print("Error during file copy:", e.message)
         
-        if callback == None:
-            callback = on_copy_finished
+    if callback == None:
+        callback = on_copy_finished
 
-        if src_type == "uri":
-            file = Gio.File.new_for_uri(src_path)
-        elif src_type == "path":
-            file = Gio.File.new_for_path(src_path)
-        else:
-            print("Error : " + src_type + " dosn't exist !")
-            return
+    if src_type == "uri":
+        file = Gio.File.new_for_uri(src_path)
+    elif src_type == "path":
+        file = Gio.File.new_for_path(src_path)
+    else:
+        print(f"Error : {src_type} dosn't exist !")
+        return
 
-        #cancellable = Gio.Cancellable()
+    #cancellable = Gio.Cancellable()
 
-        file.copy_async(
-            Gio.File.new_for_path(dest_path),
-            Gio.FileCopyFlags.OVERWRITE,
-            GLib.PRIORITY_DEFAULT,
-            None,
-            None,
-            callback
-        )
+    file.copy_async(
+        Gio.File.new_for_path(dest_path),
+        Gio.FileCopyFlags.OVERWRITE,
+        GLib.PRIORITY_DEFAULT,
+        None,
+        None,
+        callback
+    )
+    
+def is_process_running():
+    LAUNCHER_CONFIG = json.loads(Gio.resources_lookup_data("/xyz/oraclesmc/OraclesLauncher/config.json", Gio.ResourceLookupFlags.NONE).get_data().decode())
 
-    def load_profile(self):
-        platform = Platform()
+    if os.path.exists(platform.oracles_lockfile):
+        with open(platform.oracles_lockfile) as f:
+            oracles_pid = int(f.read())
+        
+        if psutil.pid_exists(oracles_pid):
+            try:
+                for arg in psutil.Process(oracles_pid).cmdline():
+                    if arg == f'-Dminecraft.launcher.brand={LAUNCHER_CONFIG["launcher"]["NAME"]}':
+                        #is_running_notification = Adw.Toast(title="Oraclès est déjà en cours d'éxecution !")
+                        #notification_overlay.add_toast(is_running_notification)
+                        return True
+            except:
+                os.remove(platform.oracles_lockfile)
+    
+    return False
 
-        if Path(platform.auth_file_path).is_file():
-            with open(platform.auth_file_path) as auth_file:
-                self.login_data = json.load(auth_file)
-                print("Les identifiants de connexion ont été importés avec succès !")
-                print(self.login_data)
+def get_pid():
+    if os.path.exists(platform.oracles_lockfile):
+        with open(platform.oracles_lockfile) as f:
+            pid = int(f.read())
+            
+            return pid

@@ -22,7 +22,7 @@ from PIL import Image
 import json
 
 from features.platform import Platform
-from features.utilities import Utilities
+import features.utilities
 import features.auth as auth
 
 gi.require_version("Gtk", "4.0")
@@ -32,12 +32,11 @@ gi.require_version("Gio", "2.0")
 
 from gi.repository import Gtk, Adw, Gio, GLib # type: ignore
 
-# instanciation des classes Platform et Utilities
+# instanciation de la classe Platform
 platform = Platform()
-utilities = Utilities()
 
 class NativeAuthDialog(Gtk.Window):
-    def __init__(self, parent, action, windows_theme, update_profile):
+    def __init__(self, parent, action, update_profile):
         super().__init__()
 
         self.parent = parent
@@ -54,13 +53,13 @@ class NativeAuthDialog(Gtk.Window):
             self.set_title(title)
 
             self.login
-            self.login(title, windows_theme, update_profile)
+            self.login(title, update_profile)
         elif action == "logout":
             self.logout(update_profile)
         else:
             sys.exit("Error: action " + action + " does not exist")
     
-    def login(self, title, windows_theme, update_profile):
+    def login(self, title, update_profile):
         def get_login_url():
             nonlocal login_url, state, code_verifier
 
@@ -162,7 +161,7 @@ class NativeAuthDialog(Gtk.Window):
 
         self.set_child(self.login_box)
 
-        self.connect("realize", lambda widget: windows_theme(self, title))
+        self.connect("realize", lambda widget: platform.windows_theme(self, title))
         self.set_visible(True)
 
     def validate_login(self, state, code_verifier, update_profile, login_entry_content=None):
@@ -247,7 +246,7 @@ class NativeAuthDialog(Gtk.Window):
 
                     os.remove(skin_dest_path)
 
-                    print(login_data["profile"]["avatar"])
+                    #print(login_data["profile"]["avatar"])
                     update_profile(login_data)
                     self.close()
 
@@ -263,24 +262,17 @@ class NativeAuthDialog(Gtk.Window):
                 skin_dest_path = platform.profiles_directory+"/skin.png"
 
                 # Télécharge le skin de l'utilisateur
-                utilities.copy_file(skin_src_uri, skin_dest_path, "uri", get_skin_finish)
+                features.utilities.copy_file(skin_src_uri, skin_dest_path, "uri", get_skin_finish)
 
         auth_code = None
         login_data = None
 
         if login_entry_content == None:
             login_entry_content = self.login_entry.get_buffer().get_text()
-        print(login_entry_content)
+        #print(login_entry_content)
 
         get_login_data_task = Gio.Task.new(None, None, get_skin, None)
         get_login_data_task.run_in_thread(get_login_data)
-
-        if get_login_data_task == False:
-            alert = Gtk.AlertDialog()
-            alert.set_message("Aucun compte Minecaft trouvé !")
-            alert.set_detail("Le compte avec lequel vous tentez de vous connecter ne possède pas Minecaft.")
-            alert.set_buttons(["Annuler", "Quitter"])
-            alert.choose(self)
 
     def logout(self, update_profile):
         login_data = auth.load_file()
@@ -288,7 +280,3 @@ class NativeAuthDialog(Gtk.Window):
         
         login_data = auth.load_file()
         update_profile(login_data)
-
-class AdwAuthDialog():
-    def __init__(self, parent):
-        pass

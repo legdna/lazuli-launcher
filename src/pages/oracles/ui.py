@@ -23,7 +23,9 @@ import os
 
 from features.platform import Platform
 from features.play.oracles import oracles
+import features.stop as stop
 import features.auth as auth
+import features.utilities
 
 from pages.profile import Profile
 import pages.about as about
@@ -71,7 +73,7 @@ class Menu():
 
         login_data = auth.load_file()
         if login_data != None:
-            print(login_data)
+            #print(login_data)
             self.profile_button_logo.set_from_file(f"{platform.profiles_directory}/{login_data["profile"]["avatar"]}.png")
         else:
             self.profile_button_logo.set_from_icon_name("default-minecraft-profile")
@@ -134,9 +136,27 @@ class Menu():
         # Ajoue des images d'arrière-plan
         backgrounds = glob.glob('data/background/oracles/*.bkg')
         random.shuffle(backgrounds)
-        print(backgrounds[0])
-        for background in backgrounds:
-            print(background)
+
+        first_background_image = Gtk.Picture(
+                file=Gio.File.new_for_path(backgrounds[0]),
+                hexpand=True,
+                vexpand=True,
+                content_fit=Gtk.ContentFit.COVER
+        )
+        self.carousel.append(first_background_image)
+
+        backgrounds_iter = iter(backgrounds[1:10])
+
+        def load_backgrounds_async():
+            nonlocal backgrounds, backgrounds_iter, self
+
+            try:
+                background = next(backgrounds_iter)
+                print(background)
+            except:
+                return False
+
+            #print(background)
             image = Gtk.Picture(
                 file=Gio.File.new_for_path(background),
                 hexpand=True,
@@ -145,7 +165,11 @@ class Menu():
             )
             self.carousel.append(image)
 
+            GLib.timeout_add(1, load_backgrounds_async)
+            
         self.contentbox.set_child(self.carousel)
+
+        GLib.idle_add(load_backgrounds_async)
 
         self.previous_image_button = Gtk.Button(
             icon_name="go-previous-symbolic",
@@ -190,6 +214,7 @@ class Menu():
             child=self.play_button_box,
             halign=Gtk.Align.CENTER,
             valign=Gtk.Align.CENTER,
+            visible=True,
             margin_top=20,
             css_classes=[
                 "suggested-action",
@@ -197,8 +222,30 @@ class Menu():
                 "title-3"
             ]
         )
-        self.play_button.connect("clicked", lambda widget: oracles(main_window, widget, self.progressbar, self.profile_button, self.show_sidbar, profile, self.notification_overlay))
+        self.play_button.connect("clicked", lambda widget: oracles(main_window, widget, self.stop_button, self.progressbar, self.show_sidbar, profile, self.notification_overlay, self))
         self.game_interface_box_menu.append(self.play_button)
+
+        self.stop_button_icon = Gtk.Image.new_from_icon_name("media-playback-stop-symbolic")
+        self.stop_button_label = Gtk.Label.new("Arrêter")
+        self.stop_button_box = Gtk.Box(spacing=10)
+        self.stop_button_box.append(self.stop_button_icon)
+        self.stop_button_box.append(self.stop_button_label)
+        self.stop_button = Gtk.Button(
+            child=self.stop_button_box,
+            halign=Gtk.Align.CENTER,
+            valign=Gtk.Align.CENTER,
+            visible=False,
+            margin_top=20,
+            css_classes=[
+                "stop-action",
+                "pill",
+                "title-3"
+            ]
+        )
+        self.stop_button.connect("clicked", lambda widget: stop.stop_oracles(widget, self.play_button, self.notification_overlay))
+        self.game_interface_box_menu.append(self.stop_button)
+
+        self.start_is_oracles_running_task()
 
         self.progressbar = Gtk.ProgressBar(
             margin_top=20,
@@ -206,7 +253,20 @@ class Menu():
         )
         self.game_interface_box_menu.append(self.progressbar)
 
-        GLib.timeout_add(15000, self.image_auto_navigation)
+        self.image_auto_navigation_task = GLib.timeout_add_seconds(15, self.image_auto_navigation)
+
+    def start_is_oracles_running_task(self):
+        def is_oracles_running():
+            if features.utilities.is_process_running():
+                self.play_button.set_visible(False)
+                self.stop_button.set_visible(True)
+            else:
+                self.stop_button.set_visible(False)
+                self.play_button.set_visible(True)
+            
+            return GLib.SOURCE_CONTINUE
+        
+        self.is_oracles_running_task = GLib.timeout_add_seconds(1, is_oracles_running)
 
     def show_home(self, main_window):
         main_window.select_game_interface.pop()
@@ -218,7 +278,11 @@ class Menu():
         else:
             self.game_interface.set_show_sidebar(False)
     
-    def image_navigation_logic(self, action):
+    def image_navigation_logic(self, action, origin=None):
+        if origin != "auto-navigation":
+            GLib.source_remove(self.image_auto_navigation_task)
+            self.image_auto_navigation_task = GLib.timeout_add_seconds(15, self.image_auto_navigation)
+        
         # Obtient le nombre de page présent dans le carousel
         n_pages = self.carousel.get_n_pages()
         n_pages = n_pages - 1
@@ -244,5 +308,6 @@ class Menu():
         self.carousel.scroll_to(page, True)
 
     def image_auto_navigation(self):
-        self.image_navigation_logic("next")
+        self.image_navigation_logic("next", "auto-navigation")
+
         return GLib.SOURCE_CONTINUE

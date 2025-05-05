@@ -20,7 +20,7 @@ import requests
 import zipfile
 import os
 
-from features.utilities import Utilities
+import features.utilities
 from features.platform import Platform
 
 import gi
@@ -81,7 +81,7 @@ class Terracles():
             for asset in release_data['assets']:
                 if asset['name'] == asset_name:
                     download_url = asset['browser_download_url']
-                    Utilities().copy_file(download_url, tmodloader_zip_path, "uri")
+                    features.utilities.copy_file(download_url, tmodloader_zip_path, "uri")
             
             os.makedirs(extract_path, exist_ok=True)
 

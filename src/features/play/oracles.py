@@ -22,10 +22,12 @@ import json
 from zipfile import ZipFile
 import psutil
 import requests
+import subprocess
+import time
 
 import features.auth
+import features.utilities
 from features.platform import Platform
-from features.utilities import Utilities
 from features.status import PlayTime
 
 import gi
@@ -38,33 +40,25 @@ gi.require_version("GLib", "2.0")
 from gi.repository import GLib, Gio, Adw # type: ignore
 
 platform = Platform()
-utilities = Utilities()
 
-LOCKFILE = f"{platform.oracles_directory}/oracles.lockfile"
+LOCKFILE = platform.oracles_lockfile
 LAUNCHER_CONFIG = None
 
 profile_data = None
 play_button = None
 progressbar = None
 
-def oracles(main_window, button, progress, profile_button, show_profile_menu, profile_page, notification_overlay):
+def oracles(main_window, button, stop_button, progress, show_profile_menu, profile_page, notification_overlay, oracles_menu):
     global profile_data, play_button, progressbar, LOCKFILE, LAUNCHER_CONFIG
+
+    GLib.source_remove(oracles_menu.is_oracles_running_task)
 
     LAUNCHER_CONFIG = json.loads(Gio.resources_lookup_data("/xyz/oraclesmc/OraclesLauncher/config.json", Gio.ResourceLookupFlags.NONE).get_data().decode())
 
-    if os.path.exists(LOCKFILE):
-        with open(LOCKFILE) as f:
-            oracles_pid = int(f.read())
-        
-        if psutil.pid_exists(oracles_pid):
-            try:
-                for arg in psutil.Process(oracles_pid).cmdline():
-                    if arg == f'-Dminecraft.launcher.brand={LAUNCHER_CONFIG["launcher"]["NAME"]}':
-                        is_running_notification = Adw.Toast(title="Oraclès est déjà en cours d'éxecution !")
-                        notification_overlay.add_toast(is_running_notification)
-                        return
-            except:
-                os.remove(LOCKFILE)
+    if features.utilities.is_process_running():
+        is_running_notification = Adw.Toast(title="Oraclès est déjà en cours d'éxecution !")
+        notification_overlay.add_toast(is_running_notification)
+        return
 
     profile_data = features.auth.load_file()
     play_button = button
@@ -81,27 +75,28 @@ def oracles(main_window, button, progress, profile_button, show_profile_menu, pr
 
 
     progressbar_task_id = GLib.timeout_add(100, lambda widget: on_timeout(progressbar), GLib.PRIORITY_DEFAULT)
-    main_window.navigation_menu_box.set_sensitive(False)
+    #main_window.navigation_menu_box.set_sensitive(False)
     profile_page.logout_button.set_sensitive(False)
 
     def after_launch_minecraft(_result, task):
         GLib.source_remove(progressbar_task_id)
 
         progressbar.set_visible(False)
-        play_button.set_visible(True)
+        stop_button.set_visible(True)
 
         profile_page.logout_button.set_sensitive(True)
-        main_window.navigation_menu_box.set_sensitive(True)
+        #main_window.navigation_menu_box.set_sensitive(True)
 
         if not task.had_error():
             main_window.minimize()
+        
+        oracles_menu.start_is_oracles_running_task()
 
     launch_minecraft_task = Gio.Task.new(callback=after_launch_minecraft)
     launch_minecraft_task.run_in_thread(launch_minecraft)
 
 def launch_minecraft(task, object, any, cancellable):
     global profile_data, play_button, progressbar, LOCKFILE, LAUNCHER_CONFIG
-    print(profile_data)
 
     CLIENT_ID = LAUNCHER_CONFIG["microsoft"]["CLIENT_ID"]
     REDIRECT_URL = LAUNCHER_CONFIG["microsoft"]["REDIRECT_URL"]
@@ -115,7 +110,7 @@ def launch_minecraft(task, object, any, cancellable):
         pass
     except:
         print("Erreur lors du renouvellement du profile utilisateur !")
-        task.return_error(GLib.Error("Une erreur est survenu lors de l'installation du modpack"))
+        task.return_error(GLib.Error("Erreur lors du renouvellement du profile utilisateur !"))
         return
         
     try:
@@ -156,16 +151,18 @@ def launch_minecraft(task, object, any, cancellable):
     #latest_java = soup_session.send_and_read(get_latest_java).get_data().decode()
     #latest_java = json.loads(latest_java)
 
-    print(latest_java)
+    #print(latest_java)
 
     java_dowload_link = latest_java[0]["binary"]["package"]["link"]
     java_checksum = latest_java[0]["binary"]["package"]["checksum"]
     java_archive_path = f"{java_directory}/{latest_java[0]["binary"]["package"]["name"]}"
     java_release_name = f"{latest_java[0]["release_name"]}-jre"
 
-    java_executable_path = f"{java_version_directory}/bin/java"
+    java_executable_path = f"{java_version_directory}/bin/javaw"
     
     if not os.path.exists(java_version_directory):
+        progressbar.set_text(f"Récupération de la version {java_version} de java")
+
         Gio.File.new_for_uri(java_dowload_link).copy(Gio.File.new_for_path(java_archive_path), Gio.FileCopyFlags.OVERWRITE)
         match platform.os_release:
             case "windows":
@@ -191,7 +188,7 @@ def launch_minecraft(task, object, any, cancellable):
         print("Erreur : Java n'est pas installé ou n'est pas accessible.")
         print("Veuillez installer Java (JDK 21+) et l'ajouter au PATH système.")
 
-        task.return_error(GLib.Error("Une erreur est survenu lors de l'installation du modpack"))
+        task.return_error(GLib.Error("Erreur : Java n'est pas installé ou n'est pas accessible."))
         return
     
     progressbar.set_text(f"Récupération de la version {modpack_version} du modpack")
@@ -237,23 +234,31 @@ def launch_minecraft(task, object, any, cancellable):
         return
     
     progressbar.set_text("Lancement de minecraft")
-    
-    #os.chdir(minecraft_directory)
 
     # Crée le launcher avec les flags souhaités
-    launcher = Gio.SubprocessLauncher.new(Gio.SubprocessFlags.STDOUT_PIPE | Gio.SubprocessFlags.STDERR_PIPE)
+    #launcher = Gio.SubprocessLauncher.new(Gio.SubprocessFlags.STDOUT_PIPE | Gio.SubprocessFlags.STDERR_PIPE)
 
     # Définit le répertoire de travail du sous-processus
-    launcher.set_cwd(minecraft_directory)
+    #launcher.set_cwd(minecraft_directory)
 
     # Lance le sous-processus
-    minecraft_proc = launcher.spawnv(start_minecraft_command)
-    minecraft_pid = minecraft_proc.get_identifier()
+    #minecraft_proc = launcher.spawnv(start_minecraft_command)
+    #minecraft_pid = minecraft_proc.get_identifier()
+
+    minecraft_proc = subprocess.Popen(
+        start_minecraft_command,
+        cwd=minecraft_directory,
+        creationflags=subprocess.CREATE_NO_WINDOW,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True
+    )
+
+    minecraft_pid = minecraft_proc.pid
 
     with open(LOCKFILE, "w") as oracles_lockfile:
         oracles_lockfile.write(str(minecraft_pid))
     
-    import time
     time.sleep(4.0)
     #minecraft_proc = subprocess.run(start_minecraft_command, stdout=subprocess.PIPE, text=True)
     #for line in minecraft_proc.stdout:

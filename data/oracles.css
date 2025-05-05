@@ -18,3 +18,27 @@ toastoverlay > toast > widget {
 toastoverlay > toast {
     background-color: rgba(0, 0, 0, 0.5);
 }
+
+.main-menu {
+    margin: 50px;
+}
+
+.launcher-news {
+    background-color: rgba(133, 133, 133, 0.2);
+    margin-top: 50px;
+    padding: 20px;
+    border-radius: 15px;
+}
+
+.stop-action {
+    color: white;
+    background-color: rgb(253, 88, 88);
+}
+
+.stop-action:hover {
+    background-color: rgb(253, 108, 108);
+}
+
+.stop-action:active {
+    background-color: rgb(213, 68, 68);
+}

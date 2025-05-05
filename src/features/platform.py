@@ -50,12 +50,25 @@ class Platform():
                 self.os_release = "mac"
 
     def windows_theme(self, window, title):
-        if self.pf == 'Windows' and darkdetect.isDark():
+        def system_theme_color():
+            nonlocal hwnd
+
+            if darkdetect.isDark():
+                pywinstyles.apply_style(hwnd, style="mica")
+            else:
+                pywinstyles.apply_style(hwnd, style="normal")
+            
+            #return GLib.SOURCE_CONTINUE
+
+        if self.pf == 'Windows':
             from ctypes import windll
             import pywinstyles
 
             hwnd = windll.user32.FindWindowW(None, title)
-            pywinstyles.apply_style(hwnd, style="mica")
+            #pywinstyles.apply_style(hwnd, style="mica")
+
+            system_theme_color()
+            #GLib.timeout_add_seconds(1, system_theme_color)
 
     def apparence(self, window, widget=None):
         if self.pf != 'Linux' and widget == None:
@@ -87,12 +100,6 @@ class Platform():
         #else:
         #    adw_dialog(window)
 
-
-    def java_os_release(self):
-        pf = platform.system()
-        
-
-
     def path(self):
         if self.pf == 'Windows':
             self.launcher_directory = os.getenv('APPDATA') + "/OraclesLauncher"
@@ -105,10 +112,12 @@ class Platform():
         else:
             sys.exit("Error : Platform unsupported !")
 
-        self.oracles_directory = self.launcher_directory + "/oracles"
-        self.terracles_directory = self.launcher_directory + "/terracles"
-        self.profiles_directory = self.launcher_directory + "/profiles"
+        self.oracles_directory = f"{self.launcher_directory}/oracles"
+        self.oracles_lockfile = f"{self.oracles_directory}/oracles.lockfile"
 
-        self.auth_file_path = self.profiles_directory + "/auth.json"
+        self.terracles_directory = f"{self.launcher_directory}/terracles"
+        self.profiles_directory = f"{self.launcher_directory}/profiles"
+
+        self.auth_file_path = f"{self.profiles_directory}/auth.json"
 
         self.default_profile_image = "data/default_profile_logo.png"

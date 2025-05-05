@@ -17,11 +17,10 @@
 
 import sys
 import os
-import darkdetect
+import requests
 
 from features.platform import Platform
 from features.status import DiscordRichPresence
-import features.auth as auth
 
 import pages.oracles.ui as oracles
 import pages.terracles.ui as terracles
@@ -40,8 +39,11 @@ from gi.repository import Gtk, GLib, Adw, Gio, Gdk # type: ignore
 # instanciation de la classe Platform
 platform = Platform()
 
-#GLib.setenv("GSK_RENDERER", "VULKAN", False)
 GLib.setenv("GSK_DEBUG", "renderer", False)
+
+url = "https://api.github.com/repos/legdna/oracles-launcher/releases/latest"
+latest_release = requests.get(url).json()
+print(latest_release["body"])
 
 class MainWindow(platform.appwindow):
     def __init__(self, *args, **kwargs):
@@ -50,15 +52,11 @@ class MainWindow(platform.appwindow):
         app_name = "Oraclès Launcher"
         GLib.set_application_name(app_name)
 
-        #if darkdetect.isLight():
-            #Adw.StyleManager.get_default().set_color_scheme(color_scheme=Adw.ColorScheme.FORCE_LIGHT)
-        #else:
-            #Adw.StyleManager.get_default().set_color_scheme(color_scheme=Adw.ColorScheme.FORCE_DARK)
-
         self.set_default_size(1000, 550)
         self.set_size_request(1000, 550)
 
         self.main_window_box = Gtk.Box(
+            hexpand=False,
             orientation=Gtk.Orientation.VERTICAL
         )
 
@@ -68,15 +66,19 @@ class MainWindow(platform.appwindow):
         self.main_window_view = Adw.OverlaySplitView(
             collapsed=False,
             show_sidebar=True,
-            hexpand=True,
+            hexpand=False,
             vexpand=True
         )
         self.main_window_box.append(self.main_window_view)
 
         self.main_menu_box = Gtk.Box(
             orientation=Gtk.Orientation.VERTICAL,
-            halign=Gtk.Align.CENTER,
-            valign=Gtk.Align.CENTER
+            valign=Gtk.Align.CENTER,
+            hexpand=False,
+            vexpand=True,
+            css_classes=[
+                "main-menu"
+            ]
         )
 
         self.launcher_logo = Gtk.Image(
@@ -97,6 +99,29 @@ class MainWindow(platform.appwindow):
             ]
         )
         self.main_menu_box.append(self.launcher_title)
+
+        launcher_news_box = Gtk.ScrolledWindow(
+            hexpand=False,
+            vexpand=False,
+            min_content_width=200,
+            max_content_width=300,
+            min_content_height=200,
+            max_content_height=300,
+            css_classes=[
+                "launcher-news"
+            ]
+        )
+        self.main_menu_box.append(launcher_news_box)
+
+        launcher_news = Gtk.Label(
+            hexpand=False,
+            #vexpand=True,
+            use_markup=True,
+            wrap=True
+        )
+        launcher_news.set_markup(f'<span size="x-large">{latest_release["name"]}</span>\n\n{latest_release["body"]}')
+        #launcher_news_buffer.insert(launcher_news_buffer.get_start_iter(), latest_release["body"])
+        launcher_news_box.set_child(launcher_news)
 
         self.select_game_interface = Adw.NavigationView()
         #self.select_game_interface.add(self.main_menu_box)
@@ -191,6 +216,8 @@ class MainWindow(platform.appwindow):
 
         # Bouton Oraclès
 
+        oracles_game_page = oracles.Menu(self).game_page
+
         self.oracles_button_icon = Gtk.Image(
             icon_name="oracles",
             #file="data/oracles.png",
@@ -220,11 +247,13 @@ class MainWindow(platform.appwindow):
             child=self.oracles_button_box,
             css_classes=["flat"]
         )
-        self.oracles_button.connect('clicked', lambda widget: self.navigation_menu_logics("go-to-page", oracles.Menu(self).game_page, widget))
+        self.oracles_button.connect('clicked', lambda widget: self.navigation_menu_logics("go-to-page", oracles_game_page, widget))
         self.home_box.append(self.oracles_button)
         self.sidebar_buttons.append(self.oracles_button)
 
         # Bouton Terraclès
+
+        terracles_game_page = terracles.Menu(self).game_page
 
         self.terracles_button_icon = Gtk.Image(
             icon_name="terracles",
@@ -252,7 +281,7 @@ class MainWindow(platform.appwindow):
             child=self.terracles_button_box,
             css_classes=["flat"]
         )
-        self.terracles_button.connect('clicked', lambda widget: self.navigation_menu_logics("go-to-page", terracles.Menu(self).game_page, widget))
+        self.terracles_button.connect('clicked', lambda widget: self.navigation_menu_logics("go-to-page", terracles_game_page, widget))
         self.home_box.append(self.terracles_button)
         self.sidebar_buttons.append(self.terracles_button)
 
@@ -294,7 +323,6 @@ class MainWindow(platform.appwindow):
 
         drp_task = Gio.Task.new()
         drp_task.run_in_thread(DiscordRichPresence().start)
-        # Utilities().thread_manager(DiscordRichPresence, self.get_application().threads, self.get_application().stop_event)
 
         self.connect("realize", lambda widget: platform.windows_theme(self, app_name))
     

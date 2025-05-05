@@ -96,8 +96,27 @@ class Menu():
         # Ajoue des images d'arrière-plan
         backgrounds = glob.glob('data/background/terracles/*.bkg')
         random.shuffle(backgrounds)
-        for background in backgrounds:
-            print(background)
+        
+        first_background_image = Gtk.Picture(
+                file=Gio.File.new_for_path(backgrounds[0]),
+                hexpand=True,
+                vexpand=True,
+                content_fit=Gtk.ContentFit.COVER
+        )
+        self.carousel.append(first_background_image)
+
+        backgrounds_iter = iter(backgrounds[1:10])
+
+        def load_backgrounds_async():
+            nonlocal backgrounds, backgrounds_iter, self
+
+            try:
+                background = next(backgrounds_iter)
+                print(background)
+            except:
+                return False
+
+            #print(background)
             image = Gtk.Picture(
                 file=Gio.File.new_for_path(background),
                 hexpand=True,
@@ -106,7 +125,11 @@ class Menu():
             )
             self.carousel.append(image)
 
+            GLib.timeout_add(1, load_backgrounds_async)
+            
         self.contentbox.set_child(self.carousel)
+
+        GLib.idle_add(load_backgrounds_async)
 
         self.previous_image_button = Gtk.Button(
             icon_name="go-previous-symbolic",
@@ -161,7 +184,7 @@ class Menu():
         self.play_button.connect("clicked", lambda widget: Terracles().play(widget, self.notification_overlay))
         self.game_interface_box_menu.append(self.play_button)
 
-        GLib.timeout_add(15000, self.image_auto_navigation)
+        self.image_auto_navigation_task = GLib.timeout_add_seconds(15, self.image_auto_navigation)
 
     def show_home(self, main_window):
         main_window.select_game_interface.pop()
@@ -171,7 +194,11 @@ class Menu():
             self.game_interface.set_show_sidebar(True)
         else:
             self.game_interface.set_show_sidebar(False)
-    def image_navigation_logic(self, action):
+    def image_navigation_logic(self, action, origin=None):
+        if origin != "auto-navigation":
+            GLib.source_remove(self.image_auto_navigation_task)
+            self.image_auto_navigation_task = GLib.timeout_add_seconds(15, self.image_auto_navigation)
+
         # Obtient le nombre de page présent dans le carousel
         n_pages = self.carousel.get_n_pages()
         n_pages = n_pages - 1
@@ -197,5 +224,5 @@ class Menu():
         self.carousel.scroll_to(page, True)
 
     def image_auto_navigation(self):
-        self.image_navigation_logic("next")
+        self.image_navigation_logic("next", "auto-navigation")
         return GLib.SOURCE_CONTINUE

@@ -18,7 +18,6 @@
 import gi
 import pages.auth as auth
 from features.platform import Platform
-from features.utilities import Utilities
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
@@ -26,12 +25,9 @@ gi.require_version("Adw", "1")
 from gi.repository import Gtk, Adw # type: ignore
 
 platform = Platform()
-utilities = Utilities()
 
 class Profile():
     def __init__(self, ui, main_window, profile_button_image, login_data):
-        self.main_window = main_window
-
         self.profile_button_image = profile_button_image
 
         self.profile_overlay = Gtk.Overlay()
@@ -107,7 +103,7 @@ class Profile():
                 "title-2"
             ]
         )
-        self.login_button.connect('clicked', lambda widget: platform.dialog(main_window, auth.NativeAuthDialog, auth.AdwAuthDialog, "login", self.update_profile))
+        self.login_button.connect('clicked', lambda widget: auth.NativeAuthDialog(main_window, "login", self.update_profile))
         self.profile_box.append(self.login_button)
 
         self.logout_button_icon = Gtk.Image.new_from_icon_name("logout")
@@ -126,7 +122,7 @@ class Profile():
                 "title-2"
             ]
         )
-        self.logout_button.connect('clicked', lambda widget: platform.dialog(self.main_window, auth.NativeAuthDialog, auth.AdwAuthDialog, "logout", self.update_profile))
+        self.logout_button.connect('clicked', lambda widget: auth.NativeAuthDialog(main_window, "logout", self.update_profile))
         self.profile_box.append(self.logout_button)
 
         self.update_profile(login_data)
