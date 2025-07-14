@@ -12,3 +12,4 @@ __pycache__/
 *.pyc
 *.zip
 *.dmg
+.DS_Store
