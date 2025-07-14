@@ -1,8 +1,8 @@
 {
     "launcher": {
-        "NAME": "Oraclès Launcher",
-        "VERSION": "2.0.0",
-        "RELEASE_TYPE": "dev"
+        "NAME": "Lazuli Launcher",
+        "VERSION": "0.1.0",
+        "RELEASE_TYPE": "Alpha"
     },
     "microsoft": {
         "CLIENT_ID": "",

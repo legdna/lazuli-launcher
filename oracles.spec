@@ -1,23 +1,14 @@
 # -*- mode: python ; coding: utf-8 -*-
 
-MSYS64_PATH = "C:/msys64/ucrt64"
-
 a = Analysis( # type: ignore
     ['src/oracles.py'],
     pathex=[],
     binaries=[],
     datas=[
-        ('data', 'data'),
-        #("C:/msys64/ucrt64/lib/girepository-1.0/*.typelib", "girepository-1.0"),
-        # Icônes et thèmes
-        #("C:/msys64/ucrt64/share/icons/Adwaita", 'share/icons/Adwaita')
+        ('data/background', 'data/background'),
+        ('data/oracles.gresource', 'data')
     ],
-    hiddenimports=[
-        'asyncio',
-        'gi._error',
-        'gi._option',
-        'gi._enum'
-    ],
+    hiddenimports=[],
     hookspath=[],
     hooksconfig={
         'gi': {
@@ -41,12 +32,13 @@ exe = EXE( # type: ignore
     a.scripts,
     [],
     exclude_binaries=True,
-    name='Oraclès Launcher',
+    name='Lazuli Launcher',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
     upx=True,
     console=False,
+    onefile=True,
     disable_windowed_traceback=False,
     argv_emulation=False,
     target_arch=None,
@@ -54,6 +46,7 @@ exe = EXE( # type: ignore
     entitlements_file=None,
     icon='data/oracles.ico'
 )
+
 coll = COLLECT( # type: ignore
     exe,
     a.binaries,
@@ -61,5 +54,14 @@ coll = COLLECT( # type: ignore
     strip=False,
     upx=True,
     upx_exclude=[],
-    name='Oraclès Launcher',
+    name='Lazuli Launcher',
+)
+app = BUNDLE( # type: ignore
+    coll,
+    name='Lazuli Launcher.app',
+    icon='data/oracles_macos.ico',
+    bundle_identifier='dev.lazura.LazuliLauncher',
+    info_plist={
+        'NSMicrophoneUsageDescription': 'Nécessaire pour utiliser le chat de proximité.'
+    }
 )

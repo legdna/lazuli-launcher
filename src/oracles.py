@@ -1,5 +1,5 @@
 
-# Oraclès Launcher
+# Lazuli Launcher
 # ---
 # Copyright (C) 2025 - legdna <legdna@proton.me>
 #
@@ -18,9 +18,13 @@
 import sys
 import os
 import requests
+import json
 
 from features.platform import Platform
 from features.status import DiscordRichPresence
+import features.settings as settings
+
+from pages.home import Home
 
 import pages.oracles.ui as oracles
 import pages.terracles.ui as terracles
@@ -39,24 +43,32 @@ from gi.repository import Gtk, GLib, Adw, Gio, Gdk # type: ignore
 # instanciation de la classe Platform
 platform = Platform()
 
-GLib.setenv("GSK_DEBUG", "renderer", False)
+# Création des répertoires OraclesLauncher
+os.makedirs(platform.launcher_directory, exist_ok=True)
+os.makedirs(platform.profiles_directory, exist_ok=True)
+os.makedirs(platform.oracles_directory, exist_ok=True)
+os.makedirs(platform.terracles_directory, exist_ok=True)
 
-url = "https://api.github.com/repos/legdna/oracles-launcher/releases/latest"
-latest_release = requests.get(url).json()
-print(latest_release["body"])
+settings.init_settings()
+
+GLib.setenv("GSK_DEBUG", "renderer", False)
 
 class MainWindow(platform.appwindow):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        app_name = "Oraclès Launcher"
+        data = Gio.resources_lookup_data("/xyz/oraclesmc/OraclesLauncher/config.json", Gio.ResourceLookupFlags.NONE)
+        self.config = json.loads(data.get_data().decode())
+
+        app_name = self.config["launcher"]["NAME"]
         GLib.set_application_name(app_name)
 
-        self.set_default_size(1000, 550)
-        self.set_size_request(1000, 550)
+        self.set_default_size(1150, 650)
+        self.set_size_request(1150, 650)
 
         self.main_window_box = Gtk.Box(
             hexpand=False,
+            vexpand=True,
             orientation=Gtk.Orientation.VERTICAL
         )
 
@@ -73,6 +85,10 @@ class MainWindow(platform.appwindow):
 
         self.main_menu_box = Gtk.Box(
             orientation=Gtk.Orientation.VERTICAL,
+        )
+
+        self.center_main_menu_box = Gtk.Box(
+            orientation=Gtk.Orientation.VERTICAL,
             valign=Gtk.Align.CENTER,
             hexpand=False,
             vexpand=True,
@@ -80,38 +96,64 @@ class MainWindow(platform.appwindow):
                 "main-menu"
             ]
         )
+        self.main_menu_box.append(self.center_main_menu_box)
+
+        launcher_news_box_margin = 50
+        self.bottom_main_menu_box = Gtk.Box(
+            orientation=Gtk.Orientation.VERTICAL,
+            vexpand=False,
+            hexpand=False,
+            halign=Gtk.Align.CENTER,
+            width_request=700,
+            margin_start=launcher_news_box_margin,
+            margin_end=launcher_news_box_margin,
+            margin_bottom=20,
+            spacing=20
+        )
+        self.main_menu_box.append(self.bottom_main_menu_box)
 
         self.launcher_logo = Gtk.Image(
             icon_name="oracles",
-            #file="data/oracles.png",
-            pixel_size=130,
+            pixel_size=170,
             css_classes=[
                 "lowres-icon"
             ]
         )
-        self.main_menu_box.append(self.launcher_logo)
+        self.center_main_menu_box.append(self.launcher_logo)
 
         self.launcher_title = Gtk.Label(
-            label="Oraclès Launcher",
+            label=app_name,
             margin_top=20,
             css_classes=[
                 "title-1"
             ]
         )
-        self.main_menu_box.append(self.launcher_title)
+        self.center_main_menu_box.append(self.launcher_title)
+
+        Home(self)
 
         launcher_news_box = Gtk.ScrolledWindow(
             hexpand=False,
-            vexpand=False,
+            vexpand=True,
             min_content_width=200,
-            max_content_width=300,
-            min_content_height=200,
+            min_content_height=100,
             max_content_height=300,
             css_classes=[
                 "launcher-news"
             ]
         )
-        self.main_menu_box.append(launcher_news_box)
+        self.bottom_main_menu_box.append(launcher_news_box)
+
+        try:
+            url = "https://api.github.com/repos/legdna/oracles-launcher/releases/latest"
+            latest_release = requests.get(url).json()
+
+            #if latest_release["message"]:
+            #    latest_release = {"name": "Erreur", "body": "Impossible de récupérer les notes de version depuis GitHub !"}
+        except Exception as e:
+            latest_release = {"name": "Erreur", "body": "Impossible de récupérer les notes de version depuis GitHub !"}
+
+        print(latest_release)
 
         launcher_news = Gtk.Label(
             hexpand=False,
@@ -119,9 +161,14 @@ class MainWindow(platform.appwindow):
             use_markup=True,
             wrap=True
         )
-        launcher_news.set_markup(f'<span size="x-large">{latest_release["name"]}</span>\n\n{latest_release["body"]}')
+        launcher_news.set_markup(f'<span font_weight="bold"><span size="x-large">{latest_release["name"]}</span>\n\n{latest_release["body"]}</span>')
         #launcher_news_buffer.insert(launcher_news_buffer.get_start_iter(), latest_release["body"])
         launcher_news_box.set_child(launcher_news)
+
+        launcher_copyright = Gtk.Label(
+            label=f"{self.config["launcher"]["NAME"]} - Copyright © Lazura Studio"
+        )
+        self.bottom_main_menu_box.append(launcher_copyright)
 
         self.select_game_interface = Adw.NavigationView()
         #self.select_game_interface.add(self.main_menu_box)
@@ -377,17 +424,14 @@ class MainWindow(platform.appwindow):
                 button_title_box("hide")
                 self.select_game_interface.push(new_page)
 
-    def show_about(self, action):
-        platform.about(self)
-
-class OraclesLauncher(Adw.Application):
+class LazuliLauncher(Adw.Application):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         screen = Gdk.Display.get_default()
 
         # Charger et enregistrer la ressource
-        resource = Gio.Resource.load("data/oracles.gresource")
-        resource._register()
+        #resource = Gio.Resource.load("data/oracles.gresource")
+        #resource._register()
 
         # Ajouter le chemin de la ressource au thème d'icônes
         theme = Gtk.IconTheme.get_for_display(screen)
@@ -400,12 +444,6 @@ class OraclesLauncher(Adw.Application):
         #style_manager = Adw.StyleManager.get_default()
         #style_manager.set_color_scheme(Adw.ColorScheme.FORCE_DARK)
 
-        # Création des répertoires OraclesLauncher
-        os.makedirs(platform.launcher_directory, exist_ok=True)
-        os.makedirs(platform.profiles_directory, exist_ok=True)
-        os.makedirs(platform.oracles_directory, exist_ok=True)
-        os.makedirs(platform.terracles_directory, exist_ok=True)
-
         self.connect('activate', self.on_activate)
 
     def on_activate(self, app):
@@ -413,6 +451,6 @@ class OraclesLauncher(Adw.Application):
         #self.win.connect("close-request", self.on_window_close)
         self.win.present()
 
-app = OraclesLauncher(application_id="xyz.oraclesmc.OraclesLauncher")
+app = LazuliLauncher(application_id="xyz.oraclesmc.OraclesLauncher")
 exit_status = app.run(sys.argv)
 sys.exit(exit_status)

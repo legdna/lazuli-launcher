@@ -1,5 +1,5 @@
 
-# Oraclès Launcher
+# Lazuli Launcher
 # ---
 # Copyright (C) 2025 - legdna <legdna@proton.me>
 #
@@ -94,7 +94,7 @@ class Menu():
         )
 
         # Ajoue des images d'arrière-plan
-        backgrounds = glob.glob('data/background/terracles/*.bkg')
+        backgrounds = glob.glob(f'{platform.base_path}/data/background/terracles/*.bkg')
         random.shuffle(backgrounds)
         
         first_background_image = Gtk.Picture(
@@ -157,11 +157,17 @@ class Menu():
         self.next_image_button.connect("clicked", lambda widget: self.image_navigation_logic("next"))
         self.contentbox.add_overlay(self.next_image_button)
 
+        match platform.os_release:
+            case "mac":
+                game_logo_size = 700
+            case "windows" | "linux":
+                game_logo_size = 550
+
         self.game_logo = Gtk.Picture.new_for_resource("/xyz/oraclesmc/OraclesLauncher/logos/terracles-logo.png")
         self.game_logo.set_size_request(50, 50)
         self.game_logo_max_size = Adw.Clamp(
             child=self.game_logo,
-            maximum_size=400
+            maximum_size=game_logo_size
         )
         self.game_interface_box_menu.append(self.game_logo_max_size)
 

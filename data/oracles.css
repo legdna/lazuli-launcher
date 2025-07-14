@@ -30,6 +30,8 @@ toastoverlay > toast {
     border-radius: 15px;
 }
 
+/* STOP ACTION */
+
 .stop-action {
     color: white;
     background-color: rgb(253, 88, 88);
@@ -41,4 +43,34 @@ toastoverlay > toast {
 
 .stop-action:active {
     background-color: rgb(213, 68, 68);
+}
+
+/* ALPHA VERSION */
+
+.alpha-version {
+    color: rgb(255, 138, 130);
+    background-color: rgba(255, 138, 130, 0.2);
+    border-radius: 25px;
+}
+
+.beta-version {
+    color: rgb(255, 222, 130);
+    background-color: rgba(255, 222, 130, 0.2);
+    border-radius: 25px;
+}
+
+.release-version {
+    color: rgb(130, 188, 255);
+    background-color: rgba(130, 188, 255, 0.2);
+    border-radius: 25px;
+}
+
+.game-version {
+    color: rgb(106, 174, 251);
+    background-color: rgba(41, 75, 114, 0.5);
+    border-radius: 25px;
+}
+
+.action-bar {
+    background-color: rgba(0, 0, 0, 0.15);
 }

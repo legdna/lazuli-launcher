@@ -1,6 +1,6 @@
-# **Oraclès Launcher**
+# **Lazuli Launcher**
 
-Oraclès Launcher is the official launcher for the Oraclès Discord server. It enables players to seamlessly connect and play on the Oraclès Minecraft server and the Terraclès Terraria server.
+Lazuli Launcher is the official launcher for the Oraclès Discord server. It enables players to seamlessly connect and play on the Oraclès Minecraft server and the Terraclès Terraria server.
 
 ---
 

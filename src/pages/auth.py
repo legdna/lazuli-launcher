@@ -1,5 +1,5 @@
 
-# Oraclès Launcher
+# Lazuli Launcher
 # ---
 # Copyright (C) 2025 - legdna <legdna@proton.me>
 #
@@ -52,7 +52,6 @@ class NativeAuthDialog(Gtk.Window):
             title = "Se connecter"
             self.set_title(title)
 
-            self.login
             self.login(title, update_profile)
         elif action == "logout":
             self.logout(update_profile)
@@ -90,7 +89,7 @@ class NativeAuthDialog(Gtk.Window):
                         print(f"Données reçues : {login_code}")
                         
                         output_stream = connection.get_output_stream()
-                        redirect_url = "https://oraclesmc.xyz/auth"
+                        redirect_url = "https://lazura.dev/oracles/auth"
                         response = f"HTTP/1.1 302 Found\r\nLocation: {redirect_url}\r\n\r\n".encode('utf-8')
                         output_stream.write_all(response)
                         output_stream.close_async(GLib.PRIORITY_DEFAULT, None, None)
@@ -193,7 +192,7 @@ class NativeAuthDialog(Gtk.Window):
 
                 return
             except minecraft_launcher_lib.exceptions.AccountNotOwnMinecraft:
-                print("")
+                print("Ce compte ne possède pas Minecraft !")
 
                 get_login_data_task.return_boolean(False)
                 self.close()
@@ -210,8 +209,8 @@ class NativeAuthDialog(Gtk.Window):
             print(result)
             print(any)
 
-            def get_skin_finish(source_file, result):
-                if source_file.copy_finish(result):
+            def get_skin_finish(result, task, any):
+                if task.propagate_boolean():
 
                     #login_avatar_image = Gdk.Texture.new_from_file(Gio.File.new_for_path(platform.oracles_directory+"/profile.png"))
                     #self.login_avatar.set_custom_image(login_avatar_image)
@@ -262,7 +261,7 @@ class NativeAuthDialog(Gtk.Window):
                 skin_dest_path = platform.profiles_directory+"/skin.png"
 
                 # Télécharge le skin de l'utilisateur
-                features.utilities.copy_file(skin_src_uri, skin_dest_path, "uri", get_skin_finish)
+                features.utilities.download_file(skin_src_uri, skin_dest_path, get_skin_finish)
 
         auth_code = None
         login_data = None

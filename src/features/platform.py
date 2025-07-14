@@ -1,5 +1,5 @@
 
-# Oraclès Launcher
+# Lazuli Launcher
 # ---
 # Copyright (C) 2025 - legdna <legdna@proton.me>
 #
@@ -20,17 +20,36 @@ import gi
 import os
 import sys
 import darkdetect
+import json
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 gi.require_version("GLib", "2.0")
+gi.require_version("Gio", "2.0")
 
-from gi.repository import Gtk, GLib, Adw # type: ignore
+from gi.repository import Gtk, GLib, Adw, Gio # type: ignore
+
+if hasattr(sys, "_MEIPASS"):
+    # Exécution dans un bundle PyInstaller
+    base_path = sys._MEIPASS
+else:
+    # Exécution normale
+    base_path = os.path.abspath(".")
+
+gresource_path = os.path.join(base_path, "data", "oracles.gresource")
+
+# Charger et enregistrer la ressource
+resource = Gio.Resource.load(gresource_path)
+resource._register()
 
 class Platform():
     def __init__(self):
-        self.pf = platform.system()
+        self.base_path = base_path
 
+        self.pf = platform.system()
+        proc_arch = platform.machine()
+
+        print(proc_arch)
         self.path()
 
         if self.pf != 'Linux':
@@ -48,6 +67,12 @@ class Platform():
                 self.os_release = "linux"
             case "Darwin":
                 self.os_release = "mac"
+        
+        match proc_arch:
+            case "AMD64":
+                self.arch = "x64"
+            case "arm64":
+                self.arch = "aarch64"
 
     def windows_theme(self, window, title):
         def system_theme_color():
@@ -101,14 +126,17 @@ class Platform():
         #    adw_dialog(window)
 
     def path(self):
+
+        LAUNCHER_CONFIG = json.loads(Gio.resources_lookup_data("/xyz/oraclesmc/OraclesLauncher/config.json", Gio.ResourceLookupFlags.NONE).get_data().decode())
+
         if self.pf == 'Windows':
-            self.launcher_directory = os.getenv('APPDATA') + "/OraclesLauncher"
+            self.launcher_directory = os.getenv('APPDATA') + "/" + LAUNCHER_CONFIG["launcher"]["NAME"]
             self.temp_directory = os.getenv('TEMP')
 
         elif self.pf == 'Darwin':
-            self.launcher_directory = ""
+            self.launcher_directory = os.getenv('HOME') + "/Library/Application Support/" + LAUNCHER_CONFIG["launcher"]["NAME"]
         elif self.pf == 'Linux':
-            self.launcher_directory = os.getenv('HOME') + "/.var/app/xyz.oraclesmc.OraclesLauncher"
+            self.launcher_directory = os.getenv('HOME') + "/.local/share/" + LAUNCHER_CONFIG["launcher"]["NAME"]
         else:
             sys.exit("Error : Platform unsupported !")
 
@@ -118,6 +146,7 @@ class Platform():
         self.terracles_directory = f"{self.launcher_directory}/terracles"
         self.profiles_directory = f"{self.launcher_directory}/profiles"
 
+        self.settings_file_path = f"{self.launcher_directory}/settings.json"
         self.auth_file_path = f"{self.profiles_directory}/auth.json"
 
         self.default_profile_image = "data/default_profile_logo.png"

@@ -1,5 +1,5 @@
 
-# Oraclès Launcher
+# Lazuli Launcher
 # ---
 # Copyright (C) 2025 - legdna <legdna@proton.me>
 #

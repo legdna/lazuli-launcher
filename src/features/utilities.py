@@ -1,5 +1,5 @@
 
-# Oraclès Launcher
+# Lazuli Launcher
 # ---
 # Copyright (C) 2025 - legdna <legdna@proton.me>
 #
@@ -19,6 +19,7 @@ from pathlib import Path
 import json
 import os
 import psutil
+import requests
 
 from features.platform import Platform
 
@@ -31,36 +32,54 @@ from gi.repository import Gio, GLib # type: ignore
 
 platform = Platform()
 
-def copy_file(src_path, dest_path, src_type, callback=None):
-    def on_copy_finished(source_file, result):
-        try:
-            success = source_file.copy_finish(result)
-            print("File copy finished:", "Success" if success else "Failed")
-        except GLib.Error as e:
-            print("Error during file copy:", e.message)
+def download_file(src_path, dest_path, callback):
         
-    if callback == None:
-        callback = on_copy_finished
+    #if callback == None:
+    #    callback = on_copy_finished
 
-    if src_type == "uri":
-        file = Gio.File.new_for_uri(src_path)
-    elif src_type == "path":
-        file = Gio.File.new_for_path(src_path)
-    else:
-        print(f"Error : {src_type} dosn't exist !")
-        return
+    #if src_type == "uri":
+    #    file = Gio.File.new_for_uri(src_path)
+    #elif src_type == "path":
+    #    file = Gio.File.new_for_path(src_path)
+    #else:
+    #    print(f"Error : {src_type} dosn't exist !")
+    #    return
 
-    #cancellable = Gio.Cancellable()
-
-    file.copy_async(
-        Gio.File.new_for_path(dest_path),
-        Gio.FileCopyFlags.OVERWRITE,
-        GLib.PRIORITY_DEFAULT,
-        None,
-        None,
-        callback
-    )
+    #def on_ready(file, result, user_data):
+    #    success, content, etag = file.load_contents_finish(result)
+    #    if success:
+    #        with open(dest_path, "wb") as f:
+    #            f.write(content)
+    #           
+    #        print("Téléchargement terminé")
+    #
+    #        if callback:
+    #            callback(file, True)
+    #    else:
+    #        print("Erreur lors du téléchargement")
+    #
+    #        if callback:
+    #            callback(file, False)
+    #
+    #file.load_contents_async(None, on_ready, None)
     
+    def get_file(task, object, any, cancellable):
+
+        try:
+            file = requests.get(src_path, stream=True)
+            file.raise_for_status()
+            with open(dest_path, "wb") as f:
+                for chunk in file.iter_content(4096):
+                    f.write(chunk)
+        except Exception as e:
+            task.return_boolean(False)
+            return
+
+        task.return_boolean(True)
+
+    get_file_task = Gio.Task.new(None, None, callback, None)
+    get_file_task.run_in_thread(get_file)
+
 def is_process_running():
     LAUNCHER_CONFIG = json.loads(Gio.resources_lookup_data("/xyz/oraclesmc/OraclesLauncher/config.json", Gio.ResourceLookupFlags.NONE).get_data().decode())
 

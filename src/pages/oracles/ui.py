@@ -1,5 +1,5 @@
 
-# Oraclès Launcher
+# Lazuli Launcher
 # ---
 # Copyright (C) 2025 - legdna <legdna@proton.me>
 #
@@ -26,6 +26,7 @@ from features.play.oracles import oracles
 import features.stop as stop
 import features.auth as auth
 import features.utilities
+import features.settings as settings
 
 from pages.profile import Profile
 import pages.about as about
@@ -134,7 +135,7 @@ class Menu():
         )
 
         # Ajoue des images d'arrière-plan
-        backgrounds = glob.glob('data/background/oracles/*.bkg')
+        backgrounds = glob.glob(f'{platform.base_path}/data/background/oracles/*.bkg')
         random.shuffle(backgrounds)
 
         first_background_image = Gtk.Picture(
@@ -197,13 +198,64 @@ class Menu():
         self.next_image_button.connect("clicked", lambda widget: self.image_navigation_logic("next"))
         self.contentbox.add_overlay(self.next_image_button)
 
+        match platform.os_release:
+            case "mac":
+                game_logo_size = 700
+            case "windows" | "linux":
+                game_logo_size = 550
+
         self.game_logo = Gtk.Picture.new_for_resource("/xyz/oraclesmc/OraclesLauncher/logos/oracles-logo.png")
         self.game_logo.set_size_request(50, 50)
         self.game_logo_max_size = Adw.Clamp(
             child=self.game_logo,
-            maximum_size=400
+            maximum_size=game_logo_size
         )
         self.game_interface_box_menu.append(self.game_logo_max_size)
+
+        self.oracles_version = Gtk.Button(
+            label="Version - 1.2.9",
+            hexpand=False,
+            halign=Gtk.Align.CENTER,
+            css_classes=[
+                "title-2",
+                "game-version",
+            ]
+        )
+        self.game_interface_box_menu.append(self.oracles_version)
+
+        action_bar = Gtk.CenterBox(
+            orientation=Gtk.Orientation.HORIZONTAL,
+            #halign=Gtk.Align.CENTER,
+            valign=Gtk.Align.END,
+            hexpand=True,
+            height_request=80,
+            css_classes=[
+                #"action-bar"
+            ]
+        )
+        self.contentbox.add_overlay(action_bar)
+
+        action_bar_button_box = Gtk.Box(
+            orientation=Gtk.Orientation.VERTICAL,
+            valign=Gtk.Align.CENTER
+        )
+        action_bar.set_center_widget(action_bar_button_box)
+
+        select_version = Gtk.DropDown(
+            width_request=200,
+            valign=Gtk.Align.CENTER,
+            margin_start=20,
+            margin_end=20
+        )
+        #select_version.connect('notify::selected-item', None)
+        action_bar.set_end_widget(select_version)
+
+        select_version_strings = Gtk.StringList()
+        select_version.props.model = select_version_strings
+        select_version_items = ["Oraclès v1.2.9"]
+
+        for item in select_version_items:
+            select_version_strings.append(item)
 
         self.play_button_icon = Gtk.Image.new_from_icon_name("media-playback-start-symbolic")
         self.play_button_label = Gtk.Label.new("Jouer")
@@ -215,15 +267,14 @@ class Menu():
             halign=Gtk.Align.CENTER,
             valign=Gtk.Align.CENTER,
             visible=True,
-            margin_top=20,
             css_classes=[
                 "suggested-action",
                 "pill",
-                "title-3"
+                "title-2"
             ]
         )
         self.play_button.connect("clicked", lambda widget: oracles(main_window, widget, self.stop_button, self.progressbar, self.show_sidbar, profile, self.notification_overlay, self))
-        self.game_interface_box_menu.append(self.play_button)
+        action_bar_button_box.append(self.play_button)
 
         self.stop_button_icon = Gtk.Image.new_from_icon_name("media-playback-stop-symbolic")
         self.stop_button_label = Gtk.Label.new("Arrêter")
@@ -235,23 +286,23 @@ class Menu():
             halign=Gtk.Align.CENTER,
             valign=Gtk.Align.CENTER,
             visible=False,
-            margin_top=20,
             css_classes=[
                 "stop-action",
                 "pill",
-                "title-3"
+                "title-2"
             ]
         )
         self.stop_button.connect("clicked", lambda widget: stop.stop_oracles(widget, self.play_button, self.notification_overlay))
-        self.game_interface_box_menu.append(self.stop_button)
+        action_bar_button_box.append(self.stop_button)
 
         self.start_is_oracles_running_task()
 
         self.progressbar = Gtk.ProgressBar(
             margin_top=20,
-            visible=False
+            visible=False,
+            width_request=500
         )
-        self.game_interface_box_menu.append(self.progressbar)
+        action_bar_button_box.append(self.progressbar)
 
         self.image_auto_navigation_task = GLib.timeout_add_seconds(15, self.image_auto_navigation)
 

@@ -1,5 +1,5 @@
 
-# Oraclès Launcher
+# Lazuli Launcher
 # ---
 # Copyright (C) 2025 - legdna <legdna@proton.me>
 #
@@ -30,7 +30,9 @@ class Profile():
     def __init__(self, ui, main_window, profile_button_image, login_data):
         self.profile_button_image = profile_button_image
 
-        self.profile_overlay = Gtk.Overlay()
+        self.profile_overlay = Gtk.Overlay(
+            
+        )
 
         self.profile_title = Gtk.Label(
             label="Profile",
@@ -58,6 +60,7 @@ class Profile():
 
         self.profile_box = Gtk.Box(
             orientation=Gtk.Orientation.VERTICAL,
+            width_request=270,
             spacing=10,
             #halign=Gtk.Align.CENTER,
             valign=Gtk.Align.CENTER

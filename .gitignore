@@ -3,9 +3,12 @@
 /.env
 /oracles.build
 /oracles.dist
+/build
+/dist
 /data/config.json
 /data/background/test_vid.mp4
 /data/oracles.gresource
 __pycache__/
 *.pyc
 *.zip
+*.dmg

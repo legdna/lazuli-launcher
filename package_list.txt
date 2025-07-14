@@ -1,10 +1,14 @@
+# windows
+
 pacman -Sy mingw-w64-ucrt-x86_64-gtk4
 pacman -Sy mingw-w64-ucrt-x86_64-libadwaita
 pacman -Sy mingw-w64-ucrt-x86_64-python
 pacman -Sy mingw-w64-ucrt-x86_64-python-gobject
 pacman -Sy mingw-w64-ucrt-x86_64-python-psutil
+pacman -Sy mingw-w64-ucrt-x86_64-python-pillow
+pacman -Sy mingw-w64-ucrt-x86_64-python-nuitka
 pacman -Sy mingw-w64-ucrt-x86_64-webp-pixbuf-loader
-pacman -Sy mingw-w64-ucrt-x86_64-pyinstaller
+pacman -Sy mingw-w64-ucrt-x86_64-nuitka
 pacman -Sy mingw-w64-ucrt-x86_64-python-pip
 
 pip install darkdetect
@@ -12,5 +16,22 @@ pip install discord-rich-presence
 pip install requests
 pip install minecraft_launcher_lib
 pip install pillow
-pip install dotenv
+pip install psutil
 pip install pywinstyles
+pip install pygobject-stubs
+
+
+# macos
+brew install gtk4
+brew install libadwaita
+brew install pygobject3
+brew install json-glib
+
+pip install pygobject
+pip install darkdetect
+pip install discord-rich-presence
+pip install requests
+pip install minecraft_launcher_lib
+pip install pillow
+pip install psutil
+pip install pygobject-stubs

@@ -1,5 +1,5 @@
 
-# Oraclès Launcher
+# Lazuli Launcher
 # ---
 # Copyright (C) 2025 - legdna <legdna@proton.me>
 #
@@ -85,10 +85,10 @@ class AdwAboutDialog():
     def __init__(self, parent):
         parent.about = Adw.AboutDialog(
             application_icon="data/oracles-logo2.png",
-            application_name="Oraclès Launcher",
+            application_name="Lazuli Launcher",
             version="2.0.0",
 
-            website="https://oraclesmc.xyz",
+            website="https://oracles.lazura.dev",
             developers=[
                 "legdna"
             ]

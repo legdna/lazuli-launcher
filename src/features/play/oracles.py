@@ -1,5 +1,5 @@
 
-# Oraclès Launcher
+# Lazuli Launcher
 # ---
 # Copyright (C) 2025 - legdna <legdna@proton.me>
 #
@@ -20,7 +20,6 @@ import shutil
 import minecraft_launcher_lib
 import json
 from zipfile import ZipFile
-import psutil
 import requests
 import subprocess
 import time
@@ -114,7 +113,7 @@ def launch_minecraft(task, object, any, cancellable):
         return
         
     try:
-        update_url = "https://oraclesmc.xyz/update.json"
+        update_url = "https://share.lazura.dev/pkg/oracles/update.json"
 
         #get_latest_update_file = Soup.Message.new("GET", update_url)
         #latest_update_file = soup_session.send_and_read(get_latest_update_file).get_data().decode()
@@ -144,7 +143,7 @@ def launch_minecraft(task, object, any, cancellable):
     java_version_directory = f"{java_directory}/{java_version}"
 
     # Obtention de la dernière version de java
-    latest_java_url = f"https://api.adoptium.net/v3/assets/latest/{java_version}/hotspot?architecture=x64&image_type=jre&os={platform.os_release}&vendor=eclipse"
+    latest_java_url = f"https://api.adoptium.net/v3/assets/latest/{java_version}/hotspot?architecture={platform.arch}&image_type=jre&os={platform.os_release}&vendor=eclipse"
     latest_java = requests.get(latest_java_url).json()
 
     #get_latest_java = Soup.Message.new("GET", latest_java_url)
@@ -158,21 +157,36 @@ def launch_minecraft(task, object, any, cancellable):
     java_archive_path = f"{java_directory}/{latest_java[0]["binary"]["package"]["name"]}"
     java_release_name = f"{latest_java[0]["release_name"]}-jre"
 
-    java_executable_path = f"{java_version_directory}/bin/javaw"
-    
+    match platform.os_release:
+        case "windows" | "linux":
+            java_executable_path = f"{java_version_directory}/bin/javaw"
+        case "mac":
+            java_executable_path = f"{java_version_directory}/Contents/Home/bin/java"
+
     if not os.path.exists(java_version_directory):
         progressbar.set_text(f"Récupération de la version {java_version} de java")
 
-        Gio.File.new_for_uri(java_dowload_link).copy(Gio.File.new_for_path(java_archive_path), Gio.FileCopyFlags.OVERWRITE)
+        #Gio.File.new_for_uri(java_dowload_link).copy(Gio.File.new_for_path(java_archive_path), Gio.FileCopyFlags.OVERWRITE)
+        
+        try:
+            file = requests.get(java_dowload_link, stream=True)
+            file.raise_for_status()
+            with open(java_archive_path, "wb") as f:
+                for chunk in file.iter_content(4096):
+                    f.write(chunk)
+        except Exception as e:
+            task.return_boolean(False)
+            return
+        
         match platform.os_release:
             case "windows":
                 with ZipFile(java_archive_path, "r") as java_zip:
                     java_zip.extractall(java_directory)
-            case "linux":
+            case "linux" | "mac":
                 import tarfile
                 with tarfile.open(java_archive_path, "r:gz") as java_tar_gz:
                     java_tar_gz.extractall(java_directory)
-        
+
         os.remove(java_archive_path)  
         os.rename(f"{java_directory}/{java_release_name}", java_version_directory)
 
@@ -204,8 +218,18 @@ def launch_minecraft(task, object, any, cancellable):
                 shutil.rmtree(directory_path)
 
         if not os.path.exists(modpack_zip_path):
-            Gio.File.new_for_uri(modpack_download_link).copy(Gio.File.new_for_path(modpack_zip_path), Gio.FileCopyFlags.OVERWRITE)
-        
+            #Gio.File.new_for_uri(modpack_download_link).copy(Gio.File.new_for_path(modpack_zip_path), Gio.FileCopyFlags.OVERWRITE)
+            try:
+                file = requests.get(modpack_download_link, stream=True)
+                file.raise_for_status()
+                with open(modpack_zip_path, "wb") as f:
+                    for chunk in file.iter_content(4096):
+                        f.write(chunk)
+            except Exception as e:
+                task.return_boolean(False)
+                return
+
+
             with ZipFile(modpack_zip_path, "r") as modpack_zip:
                 modpack_zip.extractall(oracles_version_directory)
         
@@ -245,14 +269,24 @@ def launch_minecraft(task, object, any, cancellable):
     #minecraft_proc = launcher.spawnv(start_minecraft_command)
     #minecraft_pid = minecraft_proc.get_identifier()
 
-    minecraft_proc = subprocess.Popen(
-        start_minecraft_command,
-        cwd=minecraft_directory,
-        creationflags=subprocess.CREATE_NO_WINDOW,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        text=True
-    )
+    match platform.os_release:
+        case "windows":
+            minecraft_proc = subprocess.Popen(
+                start_minecraft_command,
+                cwd=minecraft_directory,
+                creationflags=subprocess.CREATE_NO_WINDOW,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.STDOUT,
+                text=True
+            )
+        case "mac" | "linux":
+            minecraft_proc = subprocess.Popen(
+                start_minecraft_command,
+                cwd=minecraft_directory,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.STDOUT,
+                #text=True
+            )
 
     minecraft_pid = minecraft_proc.pid
 
